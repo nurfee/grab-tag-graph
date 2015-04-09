@@ -54,7 +54,8 @@ LON_DISTANCE = 111.0    #the avg distance in km for 1deg lon for the region bein
 STRUCTURING_ELEMENT = [[0,1,0],[1,1,1],[0,1,0]] #the matrix for determining the pattern for the contiguous boxes and must
     											#have same rank of the matrix it is being compared against 
 #criteria for determining cloud elements and edges
-T_BB_MAX = 243  #warmest temp to allow (-30C to -55C according to Morel and Sensi 2002)
+#T_BB_MAX = 243  #warmest temp to allow (-30C to -55C according to Morel and Sensi 2002)
+T_BB_MAX = 235  #warmest temp to allow (-30C to -55C according to Morel and Sensi 2002)
 T_BB_MIN = 218  #cooler temp for the center of the system
 CONVECTIVE_FRACTION = 0.90 #the min temp/max temp that would be expected in a CE.. this is highly conservative (only a 10K difference)
 MIN_MCS_DURATION = 3    #minimum time for a MCS to exist
@@ -635,6 +636,10 @@ def findCloudElements(mergImgs,timelist,TRMMdirName=None, type='1', pre='7A'):
 				cloudElementsUserFile.write("\nBrightness temperature variance is: %.4f K" %ndimage.variance(cloudElement, labels=labels))
 				cloudElementsUserFile.write("\nConvective fraction is: %.4f " %(((ndimage.minimum(cloudElement, labels=labels))/float((ndimage.maximum(cloudElement, labels=labels))))*100.0))
 				cloudElementsUserFile.write("\nEccentricity is: %.4f " %(cloudElementEpsilon))
+				# Added on 8 April 2015
+				# Minimum and maximum brightness temperature record
+				TIR_min = ndimage.minimum(cloudElement, labels=labels)
+				TIR_max = ndimage.maximum(cloudElement, labels=labels)
 				#populate the dictionary
 				if TRMMdirName:
 					cloudElementDict = {'uniqueID': CEuniqueID, 'cloudElementTime': timelist[t],'cloudElementLatLon': cloudElementLatLons, 'cloudElementCenter':cloudElementCenter, 'cloudElementArea':cloudElementArea, 'cloudElementEccentricity':cloudElementEpsilon, 'cloudElementTmax':TIR_max, 'cloudElementTmin': TIR_min, 'cloudElementPrecipTotal':precipTotal,'cloudElementLatLonTRMM':CETRMMList, 'TRMMArea': TRMMArea,'CETRMMmax':maxCEprecipRate, 'CETRMMmin':minCEprecipRate}
@@ -740,6 +745,7 @@ def findCloudElements(mergImgs,timelist,TRMMdirName=None, type='1', pre='7A'):
 	#drawGraph(CLOUD_ELEMENT_GRAPH, graphTitle, edgeWeight)
 
 	return CLOUD_ELEMENT_GRAPH	
+
 #******************************************************************
 # findPrecipRate is modified on 5 March 2015
 def findPrecipRate(TRMMdirName, timelist, type='1', pre='7A'):
@@ -975,6 +981,249 @@ def findCloudClusters(CEGraph):
 	cloudClustersFile.close
 	
 	return PRUNED_GRAPH  
+#******************************************************************
+# find MCS is added on 6 April 2015
+def findMCS (prunedGraph):
+	'''
+	Purpose:: 
+		Determines if subtree is a MCC according to Laurent et al 1998 criteria
+	Input:: 
+		prunedGraph: a Networkx Graph representing the CCs 
+    Output:: 
+    	finalMCSList: a list of list of tuples representing a MCS
+             
+    Assumptions: 
+    	frames are ordered and are equally distributed in time e.g. hrly satellite images
+ 
+	'''
+	MCSList = []
+	definiteMCS = []
+	eachList =[]
+	eachMCSList =[]
+	maturing = False
+	decaying = False
+	fNode = ''
+	lNode = ''
+	removeList =[]
+	imgCount = 0
+	imgTitle =''
+	
+	maxShieldNode = ''
+	orderedPath =[]
+	treeTraversalList =[]
+	unDirGraph = nx.Graph()
+	aSubGraph = nx.DiGraph()
+	definiteMCSFlag = False
+	
+	# Added on 8 April 2015
+	tbb_min = []
+	
+	#connected_components is not available for DiGraph, so generate graph as undirected 
+	unDirGraph = PRUNED_GRAPH.to_undirected()
+	subGraph = nx.connected_component_subgraphs(unDirGraph)
+
+	#for each path in the subgraphs determined
+	for path in subGraph:
+		#definite is a subTree provided the duration is longer than 3 hours
+
+		if len(path.nodes()) > MIN_MCS_DURATION:
+			orderedPath = path.nodes()
+			orderedPath.sort(key=lambda item:(len(item.split('C')[0]), item.split('C')[0]))
+			#definiteMCS.append(orderedPath)
+			
+			#build back DiGraph for checking purposes/paper purposes
+			aSubGraph.add_nodes_from(path.nodes())	
+			for eachNode in path.nodes():
+				if prunedGraph.predecessors(eachNode):
+					for node in prunedGraph.predecessors(eachNode):
+						aSubGraph.add_edge(node,eachNode,weight=edgeWeight[0])
+
+				if prunedGraph.successors(eachNode):
+					for node in prunedGraph.successors(eachNode):
+						aSubGraph.add_edge(eachNode,node,weight=edgeWeight[0])
+			imgTitle = 'CC'+str(imgCount+1)
+			#drawGraph(aSubGraph, imgTitle, edgeWeight) #for eachNode in path:
+			imgCount +=1
+			#----------end build back ---------------------------------------------
+
+			mergeList, splitList = hasMergesOrSplits(path)	
+			#add node behavior regarding neutral, merge, split or both
+			for node in path:
+				if node in mergeList and node in splitList:
+					addNodeBehaviorIdentifier(node,'B')
+				elif node in mergeList and not node in splitList:
+					addNodeBehaviorIdentifier(node,'M')
+				elif node in splitList and not node in mergeList:
+					addNodeBehaviorIdentifier(node,'S')
+				else:
+					addNodeBehaviorIdentifier(node,'N')
+			
+			#Do the first part of checking for the MCS feature
+			#find the path
+			treeTraversalList = traverseTree(aSubGraph, orderedPath[0],[],[])
+			#print "treeTraversalList is ", treeTraversalList
+			#check the nodes to determine if a MCS on just the area criteria (consecutive nodes meeting the area and temp requirements)
+			
+			MCSList = checkedNodesMCC(prunedGraph, treeTraversalList)
+			
+			for aDict in MCSList:
+				for eachNode in aDict["fullMCSMCC"]:
+					addNodeMCSIdentifier(eachNode[0],eachNode[1])
+
+			#do check for if MCCs overlap
+			if MCSList:
+				if len(MCSList) > 1:
+					for count in range(len(MCSList)): #for eachDict in MCCList:
+						#if there are more than two lists
+						if count >= 1:
+							#and the first node in this list
+							eachList = list(x[0] for x in MCSList[count]["possMCCList"])
+							eachList.sort(key=lambda nodeID:(len(nodeID.split('C')[0]), nodeID.split('C')[0]))
+
+							if eachList:
+								fNode = eachList[0]
+								#get the lastNode in the previous possMCS list
+								eachList = list(x[0] for x in MCSList[(count-1)]["possMCCList"])
+								eachList.sort(key=lambda nodeID:(len(nodeID.split('C')[0]), nodeID.split('C')[0]))
+								if eachList:
+									lNode = eachList[-1]
+									if lNode in CLOUD_ELEMENT_GRAPH.predecessors(fNode):
+										for aNode in CLOUD_ELEMENT_GRAPH.predecessors(fNode):
+											if aNode in eachList and aNode == lNode:
+												#if edge_data is equal or less than to the exisitng edge in the tree append one to the other
+												if CLOUD_ELEMENT_GRAPH.get_edge_data(aNode,fNode)['weight'] <= CLOUD_ELEMENT_GRAPH.get_edge_data(lNode,fNode)['weight']:
+													MCSList[count-1]["possMCCList"].extend(MCSList[count]["possMCCList"]) 
+													MCSList[count-1]["fullMCSMCC"].extend(MCSList[count]["fullMCSMCC"])
+													MCSList[count-1]["durationAandB"] +=  MCSList[count]["durationAandB"]
+													MCSList[count-1]["CounterCriteriaA"] += MCSList[count]["CounterCriteriaA"]
+													MCSList[count-1]["highestMCCnode"] = MCSList[count]["highestMCCnode"]
+													MCSList[count-1]["frameNum"] = MCSList[count]["frameNum"] 
+													removeList.append(count)
+
+				#update the MCSList
+				if removeList:
+					for i in removeList:
+						if (len(MCSList)-1) > i:
+							del MCSList[i]
+							removeList =[]
+
+			# Debugging findMCS
+			for eachDict in MCSList:
+				eachList = list(x[0] for x in eachDict["fullMCSMCC"])
+				eachList.sort(key=lambda nodeID:(len(nodeID.split('C')[0]), nodeID.split('C')[0]))
+				
+				eachMCCList = list(x[0] for x in eachDict["possMCCList"])
+				eachMCCList.sort(key=lambda nodeID:(len(nodeID.split('C')[0]), nodeID.split('C')[0]))
+				
+				# Minimum brightness temperature and area evolution
+				tbb_min = []
+				reff = []
+				for eachNode in eachMCCList:
+					for CEdict in CLOUD_ELEMENT_GRAPH.nodes(eachNode):
+						if CEdict[1]['uniqueID'] == eachNode:
+							tbb_min.append(CEdict[1]['cloudElementTmin'])
+							tmp = math.sqrt(CEdict[1]['cloudElementArea']/math.pi)
+							reff.append(tmp)
+				
+				# Polynomial fitting
+				if len(tbb_min) >= 3:
+					if len(tbb_min) >= 6:
+						deg = 6
+					else:
+						deg = len(tbb_min)
+					
+					x = range(0,len(tbb_min))
+					xpoly = np.arange(x[0],len(x), 0.5)
+
+					# TBB
+					ptbb = np.polyfit(x, tbb_min, deg, rcond=None, full=False, w=None, cov=False)
+					tbb_poly = np.polyval(ptbb, xpoly)
+					itbb = np.argmin(tbb_poly)
+					itbb = int(math.floor(xpoly[itbb]))
+					# Reff 
+					preff = np.polyfit(x, reff, deg, rcond=None, full=False, w=None, cov=False)
+					reff_poly = np.polyval(preff, xpoly)
+					ireff = np.argmax(reff_poly)
+					ireff = int(math.ceil(xpoly[ireff]))
+					
+					if ireff >= itbb:
+						for eachNode in eachMCCList[:itbb+1]:
+							updateNodeMCSIdentifier(eachNode,'I')
+						for eachNode in eachMCCList[itbb+1:ireff]: 
+							updateNodeMCSIdentifier(eachNode,'M')
+						for eachNode in eachMCCList[ireff:]: 
+							updateNodeMCSIdentifier(eachNode,'D')
+
+						for eachNode in eachList:
+							if not eachNode in eachMCCList:
+								updateNodeMCSIdentifier(eachNode,'-')
+					
+					else:
+						for eachNode in eachList: 
+							updateNodeMCSIdentifier(eachNode,'-')
+				else:
+					for eachNode in eachList: 
+						updateNodeMCSIdentifier(eachNode,'-')
+				
+			
+			# Write MCS stage to text file
+			definiteMCS.append(orderedPath)
+			lifeStage=[]
+			MCSPostFile = open((MAINDIRECTORY+'/textFiles/MCSLifeStage.txt'),'wb')
+			for eachPath in definiteMCS:
+				eachPath.sort(key=lambda nodeID:(len(nodeID.split('C')[0]), nodeID.split('C')[0], nodeID.split('CE')[1]))
+				tmp = []
+				for CEuniqueID in eachPath:
+					for CEdict in CLOUD_ELEMENT_GRAPH.nodes(CEuniqueID):
+						if CEdict[1]['uniqueID'] == CEuniqueID:
+							tmp.append((CEuniqueID,CEdict[1]['nodeMCSIdentifier']))
+				if len(tmp) > 0:
+					lifeStage.append(tmp)
+					MCSPostFile.write("\n %s" %tmp)	
+			MCSPostFile.close
+								
+			
+			#check if the nodes also meet the duration criteria and the shape crieria
+			for eachDict in MCSList:
+				#order the fullMCSMCC list, then run maximum extent and eccentricity criteria 
+				if (eachDict["durationAandB"] * TRES) >= MINIMUM_DURATION and (eachDict["durationAandB"] * TRES) <= MAXIMUM_DURATION:
+					eachList = list(x[0] for x in eachDict["fullMCSMCC"])
+					eachList.sort(key=lambda nodeID:(len(nodeID.split('C')[0]), nodeID.split('C')[0]))
+					eachMCCList = list(x[0] for x in eachDict["possMCCList"])
+					eachMCCList.sort(key=lambda nodeID:(len(nodeID.split('C')[0]), nodeID.split('C')[0]))
+					
+					#update the nodemcsidentifer behavior
+					#find the first element eachMCCList in eachList, and ensure everything ahead of it is indicated as 'I', 
+					#find last element in eachMCCList in eachList and ensure everything after it is indicated as 'D'
+					#ensure that everything between is listed as 'M'
+					for eachNode in eachList[:(eachList.index(eachMCCList[0]))]: 
+						addNodeMCSIdentifier(eachNode,'I')
+
+					addNodeMCSIdentifier(eachMCCList[0],'M')
+
+					for eachNode in eachList[(eachList.index(eachMCCList[-1])+1):]:
+						addNodeMCSIdentifier(eachNode, 'D')
+
+					#update definiteMCS list
+					for eachNode in orderedPath[(orderedPath.index(eachMCCList[-1])+1):]:
+						addNodeMCSIdentifier(eachNode, 'D')
+
+					#run maximum extent and eccentricity criteria
+					maxExtentNode, definiteMCCFlag = maxExtentAndEccentricity(eachList)
+					#print "maxExtentNode, definiteMCCFlag ", maxExtentNode, definiteMCCFlag
+					if definiteMCCFlag == True:
+						definiteMCC.append(eachList)
+						
+			#definiteMCS.append(orderedPath)
+			
+			#reset for next subGraph	
+			aSubGraph.clear()
+			orderedPath=[]
+			MCCList =[]
+			MCSList =[]
+			definiteMCSFlag = False
+		
+	return definiteMCS
 #******************************************************************
 def findMCC (prunedGraph):
 	'''
@@ -1821,7 +2070,8 @@ def updateNodeMCSIdentifier (thisNode, nodeMCSIdentifier):
 	'''
 	for eachdict in CLOUD_ELEMENT_GRAPH.nodes(thisNode):
 		if eachdict[1]['uniqueID'] == thisNode:
-			eachdict[1]['nodeMCSIdentifier'] = nodeBehaviorIdentifier
+			eachdict[1]['nodeMCSIdentifier'] = nodeMCSIdentifier
+			#eachdict[1]['nodeMCSIdentifier'] = nodeBehaviorIdentifier
 
 	return
 #******************************************************************
