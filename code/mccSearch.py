@@ -2340,8 +2340,8 @@ def checkForFiles(startTime, endTime, thisDir, fileType, type='1', pre=None):
 	while currFilename is not endFilename:
 		if not os.path.isfile(currFilename):
 			print "file is missing! Filename: ", currFilename
-			status = False
-			return status,filelist
+			#status = False
+			#return status,filelist
 		else:
 			#create filelist
 			filelist.append(currFilename)
