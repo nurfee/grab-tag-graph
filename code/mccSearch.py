@@ -33,6 +33,10 @@ import matplotlib.colors as mcolors
 from matplotlib.ticker import FuncFormatter, FormatStrFormatter
 from scipy.ndimage import map_coordinates
 
+# Set the recursion limit for network graph
+import sys
+sys.setrecursionlimit(10000000)
+
 #----------------------- GLOBAL VARIABLES --------------------------
 # --------------------- User defined variables ---------------------
 #FYI the lat lon values are not necessarily inclusive of the points given. These are the limits
@@ -41,10 +45,16 @@ from scipy.ndimage import map_coordinates
 #LATMAX = '19.0' #max latitude; -ve values in the SH e.g. 5S = -5 20.0
 #LONMIN = '-5.0' #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
 #LONMAX = '9.0' #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
+# Bengal
 LATMIN = '-0.02' #min latitude; -ve values in the SH e.g. 5S = -5
 LATMAX = '12.02' #max latitude; -ve values in the SH e.g. 5S = -5 20.0
 LONMIN = '79.98' #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
 LONMAX = '100.02' #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
+# Indonesia
+#LATMIN = '-15.02' #min latitude; -ve values in the SH e.g. 5S = -5
+#LATMAX = '15.02' #max latitude; -ve values in the SH e.g. 5S = -5 20.0
+#LONMIN = '89.98' #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
+#LONMAX = '150.02' #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
 XRES = 4.0				#x direction spatial resolution in km
 YRES = 4.0				#y direction spatial resolution in km
 #TRES = 1 				#temporal resolution in hrs
@@ -55,11 +65,14 @@ STRUCTURING_ELEMENT = [[0,1,0],[1,1,1],[0,1,0]] #the matrix for determining the 
     											#have same rank of the matrix it is being compared against 
 #criteria for determining cloud elements and edges
 #T_BB_MAX = 243  #warmest temp to allow (-30C to -55C according to Morel and Sensi 2002)
-T_BB_MAX = 235  #warmest temp to allow (-30C to -55C according to Morel and Sensi 2002)
-T_BB_MIN = 218  #cooler temp for the center of the system
+#T_BB_MAX = 235  #warmest temp to allow (Vila et al 2008)
+#T_BB_MIN = 218  #cooler temp for the center of the system
+T_BB_MAX = 235  #warmest temp to allow (Mapes and Houze 1993)
+T_BB_MIN = 235  #cooler temp for the center of the system
 CONVECTIVE_FRACTION = 0.90 #the min temp/max temp that would be expected in a CE.. this is highly conservative (only a 10K difference)
 MIN_MCS_DURATION = 3    #minimum time for a MCS to exist
-AREA_MIN = 2400.0		#minimum area for CE criteria in km^2 according to Vila et al. (2008) is 2400
+#AREA_MIN = 2400.0		#minimum area for CE criteria in km^2 according to Vila et al. (2008) is 2400
+AREA_MIN = 1200.0		#minimum area for CE criteria in km^2 according to Vila et al. (2008) is 2400
 MIN_OVERLAP= 10000.00   #km^2  from Williams and Houze 1987, indir ref in Arnaud et al 1992
 
 #---the MCC criteria
@@ -291,12 +304,13 @@ def readMyDataset(dirname, IRtype, filelist=None):
 			thisFile = Dataset(files,'r', format='NETCDF4')
 			#clip the dataset according to user lat,lon coordinates
 			#mask the data and fill with zeros for later 
-			tempRaw = thisFile.variables[mergVarName][:,latminIndex:latmaxIndex,lonminIndex:lonmaxIndex].astype('int16')
-			
+			#tempRaw = thisFile.variables[mergVarName][:,latminIndex:latmaxIndex,lonminIndex:lonmaxIndex].astype('int16')
+			tempRaw = thisFile.variables[mergVarName][:,latminIndex:latmaxIndex,lonminIndex:lonmaxIndex].astype('f8')
 			tempMask = ma.masked_array(tempRaw, mask=(tempRaw > T_BB_MAX), fill_value=0) 
 			
 			#get the actual values that the mask returned
-			tempMaskedValue = ma.zeros((tempRaw.shape)).astype('int16')
+			#tempMaskedValue = ma.zeros((tempRaw.shape)).astype('int16')
+			tempMaskedValue = ma.zeros((tempRaw.shape)).astype('f8')
 
 			for index, value in maenumerate(tempMask): 
 				time_index, lat_index, lon_index = index			

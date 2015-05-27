@@ -33,7 +33,8 @@ def main():
 	allCETRMMList =[]
 	#DIRS={}
 	DIRS={
-	      "mainDirStr" : "/Users/nsagitap/output/GTG/gtg_v2_test",
+#	      "mainDirStr" : "/Users/nsagitap/output/GTG/gtg_v2_test",
+	      "mainDirStr" : "/Users/nsagitap/output/GTG/bengal_1m_235K_f8",
 	      "TRMMdirName" : "/Users/nsagitap/data/TRMM/201111", 
 	      "CEoriDirName" : "/Users/nsagitap/data/MTSAT/201111",
 	     }
@@ -43,8 +44,10 @@ def main():
 	IRpre = 'tbb_IR1_' # prefix of IR dataset (e.g. for tbb_IR1_yyyymmddhr.nc, type 'tbb_IR1_'; default is none)
 	TRMMtype = '2' # 1 for version 7A, 2 for others
 	TRMMpre = '7' # number of TRMM version (e.g. 7A, 7; default is 7A)
-	startDateTime = '201111100030'
-	endDateTime = '201111100530'
+#	startDateTime = '201111100030'
+#	endDateTime = '201111100530'
+	startDateTime = '201111010030'
+	endDateTime = '201111302330'
 
 	#for GrADs
 	subprocess.call('export DISPLAY=:0.0', shell=True)
@@ -204,8 +207,8 @@ def main():
 	print "\n -------------- findCloudClusters ----------"
 	prunedGraph = mccSearch.findCloudClusters(CEGraph)
 	print "\n -------------- findMCCs ----------"
-	MCSList = mccSearch.findMCS(prunedGraph)
-	#MCCList,MCSList = mccSearch.findMCC(prunedGraph)
+	#MCSList = mccSearch.findMCS(prunedGraph)
+	MCCList,MCSList = mccSearch.findMCC(prunedGraph)
 	#now ready to perform various calculations/metrics
 	print ("-"*80)
 	print "\n -------------- METRICS ----------"
