@@ -12,7 +12,7 @@ import subprocess
 
 #mccSearch modules
 import mccSearch
-import files
+#import files
 
 #tic-toc
 import time
@@ -33,8 +33,7 @@ def main():
 	allCETRMMList =[]
 	#DIRS={}
 	DIRS={
-#	      "mainDirStr" : "/Users/nsagitap/output/GTG/gtg_v2_test",
-	      "mainDirStr" : "/Users/nsagitap/output/GTG/bengal_1m_235K_f8",
+	      "mainDirStr" : "/Users/nsagitap/output/GTG/gtg_test2",
 	      "TRMMdirName" : "/Users/nsagitap/data/TRMM/201111", 
 	      "CEoriDirName" : "/Users/nsagitap/data/MTSAT/201111",
 	     }
@@ -44,10 +43,8 @@ def main():
 	IRpre = 'tbb_IR1_' # prefix of IR dataset (e.g. for tbb_IR1_yyyymmddhr.nc, type 'tbb_IR1_'; default is none)
 	TRMMtype = '2' # 1 for version 7A, 2 for others
 	TRMMpre = '7' # number of TRMM version (e.g. 7A, 7; default is 7A)
-#	startDateTime = '201111100030'
-#	endDateTime = '201111100530'
-	startDateTime = '201111010030'
-	endDateTime = '201111302330'
+	startDateTime = '201111100400'
+	endDateTime = '201111100700'
 
 	#for GrADs
 	subprocess.call('export DISPLAY=:0.0', shell=True)
@@ -130,7 +127,6 @@ def main():
 	# Get the dates for analysis
 	## Start date time
 	if not startDateTime:
-	#	startDateTime = raw_input("> Please enter the start date and time yyyymmddhr: \n")
 		startDateTime = raw_input("> Please enter the start date and time yyyymmddhrmn: \n")
 	else:
 		print "> Start date time: ", startDateTime
@@ -138,12 +134,10 @@ def main():
 	### Check validity of time
 	while validDate(startDateTime) == 0:
 		print "Invalid time entered for startDateTime!"
-	#	startDateTime = raw_input("> Please enter the start date and time yyyymmddhr: \n")
 		startDateTime = raw_input("> Please enter the start date and time yyyymmddhrmn: \n")
 
 	## End date time
 	if not endDateTime:
-	#	endDateTime = raw_input("> Please enter the end date and time yyyymmddhr: \n")
 		endDateTime = raw_input("> Please enter the end date and time yyyymmddhrmn: \n")
 	else:
 		print "> End date time: ", endDateTime
@@ -151,8 +145,7 @@ def main():
 	### Check validity of time
 	while validDate(endDateTime) == 0:
 		print "Invalid time entered for endDateTime!"
-	#	endDateTime = raw_input("> Please enter the end date and time yyyymmddhr: \n")
-		endDateTime = raw_input("> Please enter the end date and time yyyymmddmn: \n")
+		endDateTime = raw_input("> Please enter the end date and time yyyymmddhrmn: \n")
 
 	# Check if all the files exisits in the MERG and TRMM directories entered
 	#test,_ = mccSearch.checkForFiles(startDateTime, endDateTime, DIRS['TRMMdirName'], 2)
@@ -163,14 +156,12 @@ def main():
 	
 	test,filelist = mccSearch.checkForFiles(startDateTime, endDateTime, DIRS['CEoriDirName'],1,type=IRtype,pre=IRpre)
 	if test == False:
-		#print "Error with files in the original MERG directory entered. Please check your files before restarting. "
 		print "Error with files in the IR directory entered. Please check your files before restarting. "
 		return
 
 	# Create main directory and file structure for storing intel
 	mccSearch.createMainDirectory(DIRS['mainDirStr'])
 	TRMMCEdirName = DIRS['mainDirStr']+'/TRMMnetcdfCEs'
-	#CEdirName = DIRS['mainDirStr']+'/MERGnetcdfCEs'
 	CEdirName = DIRS['mainDirStr']+'/IRnetcdfCEs'
 
 	# For doing some postprocessing with the clipped datasets instead of running the full program, e.g.
@@ -207,8 +198,8 @@ def main():
 	print "\n -------------- findCloudClusters ----------"
 	prunedGraph = mccSearch.findCloudClusters(CEGraph)
 	print "\n -------------- findMCCs ----------"
-	#MCSList = mccSearch.findMCS(prunedGraph)
-	MCCList,MCSList = mccSearch.findMCC(prunedGraph)
+	MCSList = mccSearch.findMCS(prunedGraph)
+	#MCCList,MCSList = mccSearch.findMCC(prunedGraph)
 	#now ready to perform various calculations/metrics
 	print ("-"*80)
 	print "\n -------------- METRICS ----------"
@@ -304,7 +295,6 @@ def displayPostprocessingPlotMenu():
     option = int(raw_input("> Please enter your option for plots: \n"))
     return option
 #*********************************************************************************************************************
-# postProcessingplotMenu is modified on 19 March 2015
 def postProcessingplotMenu(DIRS, IRtype):
     '''
     Purpose:: The flow of plots for the user to choose
@@ -319,7 +309,6 @@ def postProcessingplotMenu(DIRS, IRtype):
     Output:: None
     '''
     TRMMCEdirName = DIRS['mainDirStr']+'/TRMMnetcdfCEs'
-    #CEdirName = DIRS['mainDirStr']+'/MERGnetcdfCEs'
     CEdirName = DIRS['mainDirStr']+'/IRnetcdfCEs'
 
     option = displayPostprocessingPlotMenu()
@@ -350,7 +339,6 @@ def postProcessingplotMenu(DIRS, IRtype):
         option = displayPostprocessingPlotMenu() 
     return
 #*********************************************************************************************************************
-# validDate is modified on 23 March 2015
 def validDate(dataString):
 	'''
 	'''
@@ -370,10 +358,8 @@ def validDate(dataString):
 
 	if mm < 1 or mm > 12:
 		return 0
-	# edited
 	elif mn < 0 or mn > 59:
 		return 0
-	# edited
 	elif hh < 0 or hh > 23:
 		return 0
 	elif (dd< 0 or dd > 30) and (mm == 4 or mm == 6 or mm == 9 or mm == 11):

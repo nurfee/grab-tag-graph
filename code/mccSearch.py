@@ -33,10 +33,6 @@ import matplotlib.colors as mcolors
 from matplotlib.ticker import FuncFormatter, FormatStrFormatter
 from scipy.ndimage import map_coordinates
 
-# Set the recursion limit for network graph
-import sys
-sys.setrecursionlimit(10000000)
-
 #----------------------- GLOBAL VARIABLES --------------------------
 # --------------------- User defined variables ---------------------
 #FYI the lat lon values are not necessarily inclusive of the points given. These are the limits
@@ -45,34 +41,25 @@ sys.setrecursionlimit(10000000)
 #LATMAX = '19.0' #max latitude; -ve values in the SH e.g. 5S = -5 20.0
 #LONMIN = '-5.0' #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
 #LONMAX = '9.0' #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
-# Bengal
 LATMIN = '-0.02' #min latitude; -ve values in the SH e.g. 5S = -5
 LATMAX = '12.02' #max latitude; -ve values in the SH e.g. 5S = -5 20.0
 LONMIN = '79.98' #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
 LONMAX = '100.02' #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
-# Indonesia
-#LATMIN = '-15.02' #min latitude; -ve values in the SH e.g. 5S = -5
-#LATMAX = '15.02' #max latitude; -ve values in the SH e.g. 5S = -5 20.0
-#LONMIN = '89.98' #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
-#LONMAX = '150.02' #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
 XRES = 4.0				#x direction spatial resolution in km
 YRES = 4.0				#y direction spatial resolution in km
 #TRES = 1 				#temporal resolution in hrs
-TRES = 1				#temporal resolution in hrs
+TRES = 0.5				#temporal resolution in hrs
 LAT_DISTANCE = 111.0 	#the avg distance in km for 1deg lat for the region being considered 
 LON_DISTANCE = 111.0    #the avg distance in km for 1deg lon for the region being considered
 STRUCTURING_ELEMENT = [[0,1,0],[1,1,1],[0,1,0]] #the matrix for determining the pattern for the contiguous boxes and must
     											#have same rank of the matrix it is being compared against 
 #criteria for determining cloud elements and edges
 #T_BB_MAX = 243  #warmest temp to allow (-30C to -55C according to Morel and Sensi 2002)
-#T_BB_MAX = 235  #warmest temp to allow (Vila et al 2008)
-#T_BB_MIN = 218  #cooler temp for the center of the system
-T_BB_MAX = 235  #warmest temp to allow (Mapes and Houze 1993)
-T_BB_MIN = 235  #cooler temp for the center of the system
+T_BB_MAX = 235  #warmest temp to allow (-30C to -55C according to Morel and Sensi 2002)
+T_BB_MIN = 218  #cooler temp for the center of the system
 CONVECTIVE_FRACTION = 0.90 #the min temp/max temp that would be expected in a CE.. this is highly conservative (only a 10K difference)
-MIN_MCS_DURATION = 3    #minimum time for a MCS to exist
-#AREA_MIN = 2400.0		#minimum area for CE criteria in km^2 according to Vila et al. (2008) is 2400
-AREA_MIN = 1200.0		#minimum area for CE criteria in km^2 according to Vila et al. (2008) is 2400
+MIN_MCS_DURATION = 3    #minimum time for a MCS to exist --> number of frame (if data is not hourly, this must be changed)
+AREA_MIN = 2400.0		#minimum area for CE criteria in km^2 according to Vila et al. (2008) is 2400
 MIN_OVERLAP= 10000.00   #km^2  from Williams and Houze 1987, indir ref in Arnaud et al 1992
 
 #---the MCC criteria
@@ -304,13 +291,12 @@ def readMyDataset(dirname, IRtype, filelist=None):
 			thisFile = Dataset(files,'r', format='NETCDF4')
 			#clip the dataset according to user lat,lon coordinates
 			#mask the data and fill with zeros for later 
-			#tempRaw = thisFile.variables[mergVarName][:,latminIndex:latmaxIndex,lonminIndex:lonmaxIndex].astype('int16')
-			tempRaw = thisFile.variables[mergVarName][:,latminIndex:latmaxIndex,lonminIndex:lonmaxIndex].astype('f8')
+			tempRaw = thisFile.variables[mergVarName][:,latminIndex:latmaxIndex,lonminIndex:lonmaxIndex].astype('int16')
+			
 			tempMask = ma.masked_array(tempRaw, mask=(tempRaw > T_BB_MAX), fill_value=0) 
 			
 			#get the actual values that the mask returned
-			#tempMaskedValue = ma.zeros((tempRaw.shape)).astype('int16')
-			tempMaskedValue = ma.zeros((tempRaw.shape)).astype('f8')
+			tempMaskedValue = ma.zeros((tempRaw.shape)).astype('int16')
 
 			for index, value in maenumerate(tempMask): 
 				time_index, lat_index, lon_index = index			
@@ -335,7 +321,6 @@ def readMyDataset(dirname, IRtype, filelist=None):
 	return mergImgs, timelist
 
 #******************************************************************
-# findCloudElements is modified on 5 March 2015
 def findCloudElements(mergImgs,timelist,TRMMdirName=None, type='1', pre='7A'):
 	'''
 	Purpose::
@@ -347,8 +332,8 @@ def findCloudElements(mergImgs,timelist,TRMMdirName=None, type='1', pre='7A'):
 		maximum acceptable temperature, T_BB_MAX
 		timelist: a list of python datatimes
 		TRMMdirName (optional): string representing the path where to find the TRMM datafiles
-		type : TRMM data type
-		pre : version of TRMM
+		type: TRMM type (default: 1 for version 7A; 2 for others)
+		pre: TRMM data version (default: 7A)
 		
 	Output::
 	    CLOUD_ELEMENT_GRAPH: a Networkx directed graph where each node contains the information in cloudElementDict
@@ -459,7 +444,6 @@ def findCloudElements(mergImgs,timelist,TRMMdirName=None, type='1', pre='7A'):
 
 				# ------ NETCDF File stuff for brightness temp stuff ------------------------------------
 				thisFileName = MAINDIRECTORY +'/IRnetcdfCEs/cloudElements'+ (str(timelist[t])).replace(" ", "_") + CEuniqueID +'.nc'
-				#thisFileName = MAINDIRECTORY +'/MERGnetcdfCEs/cloudElements'+ (str(timelist[t])).replace(" ", "_") + CEuniqueID +'.nc'
 				currNetCDFCEData = Dataset(thisFileName, 'w', format='NETCDF4')
 				currNetCDFCEData.description = 'Cloud Element '+CEuniqueID + ' temperature data'
 				currNetCDFCEData.calendar = 'standard'
@@ -471,16 +455,15 @@ def findCloudElements(mergImgs,timelist,TRMMdirName=None, type='1', pre='7A'):
 				# variables
 				tempDims = ('time','lat', 'lon',)
 				times = currNetCDFCEData.createVariable('time', 'f8', ('time',))
-				# edited
+				# edited time profile
 				#times.units = 'hours since '+ str(timelist[t])[:-6]
 				times.units = 'minutes since '+ str(timelist[t])[:-3]
 				latitudes = currNetCDFCEData.createVariable('latitude', 'f8', ('lat',))
 				longitudes = currNetCDFCEData.createVariable('longitude', 'f8', ('lon',))
-#				brightnesstemp = currNetCDFCEData.createVariable('brightnesstemp', 'i16',tempDims )
 				brightnesstemp = currNetCDFCEData.createVariable('brightnesstemp', 'f8',tempDims )
 				brightnesstemp.units = 'Kelvin'
 				# NETCDF data
-				# edited on 23 March 2015
+				# edited time profile
 				#dates=[timelist[t]+timedelta(hours=0)]
 				dates=[timelist[t]+timedelta(minutes=0)]
 				times[:] =  date2num(dates,units=times.units)
@@ -493,7 +476,6 @@ def findCloudElements(mergImgs,timelist,TRMMdirName=None, type='1', pre='7A'):
 				latitudes.long_name ="Latitude"
 				
 				#generate array of zeros for brightness temperature
-#				brightnesstemp1 = ma.zeros((1,len(latitudes), len(longitudes))).astype('int16')
 				brightnesstemp1 = ma.zeros((1,len(latitudes), len(longitudes))).astype('f8')
 				#-----------End most of NETCDF file stuff ------------------------------------
 
@@ -515,8 +497,7 @@ def findCloudElements(mergImgs,timelist,TRMMdirName=None, type='1', pre='7A'):
 					if type=='1':
 						pre = '7A'
 					#open TRMM file for the resolution info and to create the appropriate sized grid
-					#TRMMfileName = TRMMdirName+'/3B42.'+ fileDate + "."+str(fileHr)+".7A.nc"
-					TRMMfileName = TRMMdirName+'/3B42.'+ fileDate + "."+str(fileHr)+"."+pre+".nc"
+					TRMMfileName = TRMMdirName+'/3B42.'+ fileDate + "."+str(fileHr)+"."+pre+".nc" # pre="7A" or others
 					
 					TRMMData = Dataset(TRMMfileName,'r', format='NETCDF4')
 					precipRate = TRMMData.variables['pcp'][:,:,:]
@@ -650,7 +631,6 @@ def findCloudElements(mergImgs,timelist,TRMMdirName=None, type='1', pre='7A'):
 				cloudElementsUserFile.write("\nBrightness temperature variance is: %.4f K" %ndimage.variance(cloudElement, labels=labels))
 				cloudElementsUserFile.write("\nConvective fraction is: %.4f " %(((ndimage.minimum(cloudElement, labels=labels))/float((ndimage.maximum(cloudElement, labels=labels))))*100.0))
 				cloudElementsUserFile.write("\nEccentricity is: %.4f " %(cloudElementEpsilon))
-				# Added on 8 April 2015
 				# Minimum and maximum brightness temperature record
 				TIR_min = ndimage.minimum(cloudElement, labels=labels)
 				TIR_max = ndimage.maximum(cloudElement, labels=labels)
@@ -761,7 +741,6 @@ def findCloudElements(mergImgs,timelist,TRMMdirName=None, type='1', pre='7A'):
 	return CLOUD_ELEMENT_GRAPH	
 
 #******************************************************************
-# findPrecipRate is modified on 5 March 2015
 def findPrecipRate(TRMMdirName, timelist, type='1', pre='7A'):
 	''' 
 	Purpose:: 
@@ -769,6 +748,8 @@ def findPrecipRate(TRMMdirName, timelist, type='1', pre='7A'):
 	Input:: 
 		TRMMdirName: a string representing the directory for the original TRMM netCDF files
 		timelist: a list of python datatimes
+		type: TRMM type (default: 1 for version 7A; 2 for others)
+		pre: TRMM data version (default: 7A)
     Output:: a list of dictionary of the TRMM data 
     	NB: also creates netCDF with TRMM data for each CE (for post processing) index
     		in MAINDIRECTORY/TRMMnetcdfCEs
@@ -780,7 +761,6 @@ def findPrecipRate(TRMMdirName, timelist, type='1', pre='7A'):
 	TRMMdataDict={}
 	precipTotal = 0.0
 
-	#os.chdir((MAINDIRECTORY+'/MERGnetcdfCEs/'))
 	os.chdir((MAINDIRECTORY+'/IRnetcdfCEs/'))
 	imgFilename = ''
 	temporalRes = 3 #3 hours for TRMM
@@ -815,8 +795,7 @@ def findPrecipRate(TRMMdirName, timelist, type='1', pre='7A'):
 		else:
 			str(fileHr)
 
-		#TRMMfileName = TRMMdirName+"/3B42."+ str(fileDate) + "."+str(fileHr)+".7A.nc"
-		TRMMfileName = TRMMdirName+"/3B42."+ str(fileDate) + "."+str(fileHr)+"."+pre+".nc"
+		TRMMfileName = TRMMdirName+"/3B42."+ str(fileDate) + "."+str(fileHr)+"."+pre+".nc" # 0 or others
 		TRMMData = Dataset(TRMMfileName,'r', format='NETCDF4')
 		precipRate = TRMMData.variables['pcp'][:,:,:]
 		latsrawTRMMData = TRMMData.variables['latitude'][:]
@@ -996,7 +975,7 @@ def findCloudClusters(CEGraph):
 	
 	return PRUNED_GRAPH  
 #******************************************************************
-# find MCS is added on 6 April 2015
+# not finished!
 def findMCS (prunedGraph):
 	'''
 	Purpose:: 
@@ -1029,7 +1008,6 @@ def findMCS (prunedGraph):
 	aSubGraph = nx.DiGraph()
 	definiteMCSFlag = False
 	
-	# Added on 8 April 2015
 	tbb_min = []
 	
 	#connected_components is not available for DiGraph, so generate graph as undirected 
@@ -2267,14 +2245,13 @@ def createMainDirectory(mainDirStr):
 
 	return 
 #******************************************************************
-# checkForFiles is modified on 23 March 2015
 def checkForFiles(startTime, endTime, thisDir, fileType, type='1', pre=None):
 	'''
 	Purpose:: To ensure all the files between the starttime and endTime
 			  exist in the directory supplied
 	Input:: 
-			startTime: a string yyyymmmddhh representing the starttime 
-			endTime: a string yyyymmmddhh representing the endTime
+			startTime: a string yyyymmmddhh[mn] representing the starttime 
+			endTime: a string yyyymmmddhh[mn] representing the endTime
 			thisDir: a string representing the directory path where to 
 				look for the file
 			fileType: an integer representing the type of file in the directory
@@ -2302,33 +2279,29 @@ def checkForFiles(startTime, endTime, thisDir, fileType, type='1', pre=None):
 	#endhh = int(endTime[-2:])
 	endhh = int(endTime[8:10])
 	endmn = int(endTime[-2:])
+
 	curryr = startyr
 	currmm = startmm
 	currdd = startdd
 	currhr = starthr
-	# added
 	currmn = startmn
+	
 	currmmStr = ''
 	currddStr = ''
 	currhrStr = ''
-	# added
 	currmnStr = ''
+
 	endmmStr = ''
 	endddStr =''
 	endhhStr = ''
-	# added
 	endmnStr = ''
 	
 	#check that the startTime is before the endTime
 	if fileType == 1:
-		#print "fileType is 1"
 		if type == '1':
 			startFilename = "merg_"+startTime+"_4km-pixel.nc"
 			endFilename = thisDir+"/merg_"+endTime+"_4km-pixel.nc"
 		else:
-			# edited on 23 March 2015
-			#startFilename = pre+startTime+"30.nc"
-			#endFilename = thisDir+"/"+pre+endTime+"30.nc"
 			startFilename = pre+startTime+".nc"
 			endFilename = thisDir+"/"+pre+endTime+".nc"
 
@@ -2345,7 +2318,6 @@ def checkForFiles(startTime, endTime, thisDir, fileType, type='1', pre=None):
 		else:
 			currhr = starthr
 
-		#curryr, currmmStr, currddStr, currhrStr,_,_,_ = findTime(curryr, currmm, currdd, currhr)
 		curryr, currmmStr, currddStr, currhrStr, currmnStr, _,_,_,_ = findTime(curryr, currmm, currdd, currhr, currmn)
 
 		if type == '1': # version 7A
@@ -2358,7 +2330,6 @@ def checkForFiles(startTime, endTime, thisDir, fileType, type='1', pre=None):
 		elif endhh%3 ==1:
 			endhh -= 1
 
-		#endyr, endmmStr, endddStr, endhhStr, _, _, _ = findTime(endyr, endmm, enddd, endhh)
 		endyr, endmmStr, endddStr, endhhStr, endmnStr, _, _, _, _ = findTime(endyr, endmm, enddd, endhh, endmn)
 
 		endFilename = thisDir+"/3B42."+str(endyr)+endmmStr+endddStr+"."+endhhStr+"."+pre+".nc"	
@@ -2389,24 +2360,18 @@ def checkForFiles(startTime, endTime, thisDir, fileType, type='1', pre=None):
 		elif fileType ==2:
 			currhr += 3
 			
-		# edited on 23 March 2015
-		#curryr, currmmStr, currddStr, currhrStr, currmm, currdd, currhr = findTime(curryr, currmm, currdd, currhr)
 		curryr, currmmStr, currddStr, currhrStr, currmnStr, currmm, currdd, currhr, currmn = findTime(curryr, currmm, currdd, currhr, currmn)
 
 		if fileType == 1:
 			if type == '1':
 				currFilename = thisDir+"/"+"merg_"+str(curryr)+currmmStr+currddStr+currhrStr+"_4km-pixel.nc"
 			else:
-				# edited on 23 March 2015
-				#currFilename = thisDir+"/"+pre+str(curryr)+currmmStr+currddStr+currhrStr+"30.nc"
 				currFilename = thisDir+"/"+pre+str(curryr)+currmmStr+currddStr+currhrStr+currmnStr+".nc"
 		if fileType == 2:
 			currFilename = thisDir+"/"+"3B42."+str(curryr)+currmmStr+currddStr+"."+currhrStr+"."+pre+".nc"
 
 	return status,filelist
 #******************************************************************
-# finTime is modified on 23 March 2015
-#def findTime(curryr, currmm, currdd, currhr):
 def findTime(curryr, currmm, currdd, currhr, currmn):
 	'''
 	Purpose:: To determine the new yr, mm, dd, hr
@@ -2466,7 +2431,6 @@ def findTime(curryr, currmm, currdd, currhr, currmn):
 	else:
 		currmnStr = str(currmn)
 
-#	return curryr, currmmStr, currddStr, currhrStr, currmm, currdd, currhr
 	return curryr, currmmStr, currddStr, currhrStr, currmnStr, currmm, currdd, currhr, currmn
 #******************************************************************	
 def find_nearest(thisArray,value):
@@ -2584,7 +2548,6 @@ def preprocessingMERG(MERGdirname):
 	subprocess.call('mv *.gif mergImgs', shell=True)
 	return
 #******************************************************************
-# postProcessingNetCDF is modified on 19 March 2015
 def postProcessingNetCDF(dataset, dirName = None, type='1'):
 	'''
 	
@@ -2720,7 +2683,6 @@ def postProcessingNetCDF(dataset, dirName = None, type='1'):
 		subprocess.call(subprocessCall, shell=True)
 
 		ImgFilename = fnameNoExtension + '.png'
-		#ImgFilename = fnameNoExtension + '.gif'
 					
 		displayCmd = '\''+'d '+ var+'\''+'\n'
 		newFileCmd = '\''+'open '+ ctlFile1+'\''+'\n'
@@ -2759,7 +2721,6 @@ def postProcessingNetCDF(dataset, dirName = None, type='1'):
 					
 					if frameNum == frame1: 
 						CE_num = fnameNoExtension.split('CE')[1]
-						#ImgFilename = fnameNoExtension.split('CE')[0] + '.gif'
 						ImgFilename = fnameNoExtension.split('CE')[0] + '.png'
 						ctlFile1 = dirName+'/ctlFiles/'+fnameNoExtension + '.ctl'
 
@@ -4065,6 +4026,7 @@ def createTextFile(finalMCCList, identifier):
 	MCSspeed = 0.0
 	MCSspeedCounter = 0
 	MCSPrecipTotal = 0.0
+	avgMCSPrecipTotal = 0.0
 	avgMCSPrecipTotalCounter = 0
 	bigPtotal = 0.0
 	bigPtotalCounter = 0
@@ -4105,7 +4067,7 @@ def createTextFile(finalMCCList, identifier):
 
 		startTime = thisDict(eachPath[0])['cloudElementTime']
 		endTime = thisDict(eachPath[-1])['cloudElementTime']
-		# edited on 23 March 2015
+		# edited time profile
 		#duration = (endTime - startTime) + timedelta(hours=TRES)
 		duration = (endTime - startTime) + timedelta(minutes=int(TRES*60))
 		
@@ -4306,6 +4268,7 @@ def createTextFile(finalMCCList, identifier):
 		firstTime = True
 		matureFlag = True
 		avgMCSPrecipTotalCounter=0
+		avgMCSPrecipTotal = 0.0
 		avgPrecipAreaPercent = 0.0
 		precipArea = 0.0
 		precipCounter = 0
