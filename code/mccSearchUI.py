@@ -45,7 +45,7 @@ def main():
 	TRMMtype = '2' # 1 for version 7A, 2 for others
 	TRMMpre = '7' # number of TRMM version (e.g. 7A, 7; default is 7A)
 	startDateTime = '200701010030'
-	endDateTime = '200701010530'
+	endDateTime = '200701102330'
 
 	#for GrADs
 	subprocess.call('export DISPLAY=:0.0', shell=True)
