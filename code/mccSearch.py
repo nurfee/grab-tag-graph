@@ -48,7 +48,7 @@ LONMAX = '100.02' #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
 XRES = 4.0				#x direction spatial resolution in km
 YRES = 4.0				#y direction spatial resolution in km
 #TRES = 1 				#temporal resolution in hrs
-TRES = 0.5				#temporal resolution in hrs
+TRES = 1				#temporal resolution in hrs
 LAT_DISTANCE = 111.0 	#the avg distance in km for 1deg lat for the region being considered 
 LON_DISTANCE = 111.0    #the avg distance in km for 1deg lon for the region being considered
 STRUCTURING_ELEMENT = [[0,1,0],[1,1,1],[0,1,0]] #the matrix for determining the pattern for the contiguous boxes and must
@@ -274,12 +274,16 @@ def readMyDataset(dirname, IRtype, filelist=None):
 		latmaxIndex = (np.where(alllatsraw == latmaxNETCDF))[0][0]
 		lonminIndex = (np.where(alllonsraw == lonminNETCDF))[0][0]
 		lonmaxIndex = (np.where(alllonsraw == lonmaxNETCDF))[0][0]
-		
+
 		#subsetting the data
-		latsraw = alllatsraw[latminIndex: latmaxIndex]
-		lonsraw = alllonsraw[lonminIndex:lonmaxIndex]
+		#latsraw = alllatsraw[latminIndex: latmaxIndex]
+		#lonsraw = alllonsraw[lonminIndex:lonmaxIndex]
+		## use all lons and lats --> added on 1 June 2015
+		latsraw = alllatsraw
+		lonsraw = alllonsraw
 
 		LON, LAT = np.meshgrid(lonsraw, latsraw)
+
 		#clean up
 		latsraw =[]
 		lonsraw = []
