@@ -33,9 +33,10 @@ def main():
 	allCETRMMList =[]
 	#DIRS={}
 	DIRS={
-	      "mainDirStr" : "/Users/nsagitap/output/GTG/gtg_test2",
-	      "TRMMdirName" : "/Users/nsagitap/data/TRMM/201111", 
-	      "CEoriDirName" : "/Users/nsagitap/data/MTSAT/201111",
+	      "mainDirStr" : "/Users/nsagitap/output/GTG/indo_200701_235K",
+#	      "TRMMdirName" : "/Users/nsagitap/data/TRMM/201111", 
+	      "TRMMdirName" : None, 
+	      "CEoriDirName" : "/Users/nsagitap/data/MTSAT/Indonesia/200701",
 	     }
 	preprocessing = ''
 	rawMERG = ''
@@ -43,8 +44,8 @@ def main():
 	IRpre = 'tbb_IR1_' # prefix of IR dataset (e.g. for tbb_IR1_yyyymmddhr.nc, type 'tbb_IR1_'; default is none)
 	TRMMtype = '2' # 1 for version 7A, 2 for others
 	TRMMpre = '7' # number of TRMM version (e.g. 7A, 7; default is 7A)
-	startDateTime = '201111100400'
-	endDateTime = '201111100700'
+	startDateTime = '200701010030'
+	endDateTime = '200701010530'
 
 	#for GrADs
 	subprocess.call('export DISPLAY=:0.0', shell=True)
@@ -149,10 +150,10 @@ def main():
 
 	# Check if all the files exisits in the MERG and TRMM directories entered
 	#test,_ = mccSearch.checkForFiles(startDateTime, endDateTime, DIRS['TRMMdirName'], 2)
-	test,_ = mccSearch.checkForFiles(startDateTime, endDateTime, DIRS['TRMMdirName'], 2, type=TRMMtype, pre=TRMMpre)
-	if test == False:
-		print "Error with files in the original TRMM directory entered. Please check your files before restarting. "
-		return
+	#test,_ = mccSearch.checkForFiles(startDateTime, endDateTime, DIRS['TRMMdirName'], 2, type=TRMMtype, pre=TRMMpre)
+	#if test == False:
+	#	print "Error with files in the original TRMM directory entered. Please check your files before restarting. "
+	#	return
 	
 	test,filelist = mccSearch.checkForFiles(startDateTime, endDateTime, DIRS['CEoriDirName'],1,type=IRtype,pre=IRpre)
 	if test == False:
@@ -198,8 +199,8 @@ def main():
 	print "\n -------------- findCloudClusters ----------"
 	prunedGraph = mccSearch.findCloudClusters(CEGraph)
 	print "\n -------------- findMCCs ----------"
-	MCSList = mccSearch.findMCS(prunedGraph)
-	#MCCList,MCSList = mccSearch.findMCC(prunedGraph)
+	#MCSList = mccSearch.findMCS(prunedGraph)
+	MCCList,MCSList = mccSearch.findMCC(prunedGraph)
 	#now ready to perform various calculations/metrics
 	print ("-"*80)
 	print "\n -------------- METRICS ----------"

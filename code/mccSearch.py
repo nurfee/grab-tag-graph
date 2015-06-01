@@ -595,12 +595,10 @@ def findCloudElements(mergImgs,timelist,TRMMdirName=None, type='1', pre='7A'):
 				currNetCDFCEData.close()
 
 				if TRMMdirName:
-
 					#calculate the total precip associated with the feature
 					for index, value in np.ndenumerate(finalCETRMMvalues):
 						precipTotal += value 
 						precip.append(value)
-			
 					rainFallacc[:] = finalCETRMMvalues[:]
 					currNetCDFTRMMData.close()
 					TRMMnumOfBoxes = np.count_nonzero(finalCETRMMvalues)
@@ -610,6 +608,10 @@ def findCloudElements(mergImgs,timelist,TRMMdirName=None, type='1', pre='7A'):
 						minCEprecipRate = np.min(finalCETRMMvalues[np.nonzero(finalCETRMMvalues)])
 					except:
 						pass
+				else: # if TRMMdirname is not available, assume those variables as 0
+					TRMMArea = 0.0;
+					maxCEprecipRate = 0.0;
+					minCEprecipRate = 0.0;
 
 				#sort cloudElementLatLons by lats
 				cloudElementLatLons.sort(key=lambda tup: tup[0])	
@@ -639,10 +641,11 @@ def findCloudElements(mergImgs,timelist,TRMMdirName=None, type='1', pre='7A'):
 				TIR_min = ndimage.minimum(cloudElement, labels=labels)
 				TIR_max = ndimage.maximum(cloudElement, labels=labels)
 				#populate the dictionary
-				if TRMMdirName:
-					cloudElementDict = {'uniqueID': CEuniqueID, 'cloudElementTime': timelist[t],'cloudElementLatLon': cloudElementLatLons, 'cloudElementCenter':cloudElementCenter, 'cloudElementArea':cloudElementArea, 'cloudElementEccentricity':cloudElementEpsilon, 'cloudElementTmax':TIR_max, 'cloudElementTmin': TIR_min, 'cloudElementPrecipTotal':precipTotal,'cloudElementLatLonTRMM':CETRMMList, 'TRMMArea': TRMMArea,'CETRMMmax':maxCEprecipRate, 'CETRMMmin':minCEprecipRate}
-				else:
-					cloudElementDict = {'uniqueID': CEuniqueID, 'cloudElementTime': timelist[t],'cloudElementLatLon': cloudElementLatLons, 'cloudElementCenter':cloudElementCenter, 'cloudElementArea':cloudElementArea, 'cloudElementEccentricity':cloudElementEpsilon, 'cloudElementTmax':TIR_max, 'cloudElementTmin': TIR_min,}
+				cloudElementDict = {'uniqueID': CEuniqueID, 'cloudElementTime': timelist[t],'cloudElementLatLon': cloudElementLatLons, 'cloudElementCenter':cloudElementCenter, 'cloudElementArea':cloudElementArea, 'cloudElementEccentricity':cloudElementEpsilon, 'cloudElementTmax':TIR_max, 'cloudElementTmin': TIR_min, 'cloudElementPrecipTotal':precipTotal,'cloudElementLatLonTRMM':CETRMMList, 'TRMMArea': TRMMArea,'CETRMMmax':maxCEprecipRate, 'CETRMMmin':minCEprecipRate}
+				#if TRMMdirName:
+				#	cloudElementDict = {'uniqueID': CEuniqueID, 'cloudElementTime': timelist[t],'cloudElementLatLon': cloudElementLatLons, 'cloudElementCenter':cloudElementCenter, 'cloudElementArea':cloudElementArea, 'cloudElementEccentricity':cloudElementEpsilon, 'cloudElementTmax':TIR_max, 'cloudElementTmin': TIR_min, 'cloudElementPrecipTotal':precipTotal,'cloudElementLatLonTRMM':CETRMMList, 'TRMMArea': TRMMArea,'CETRMMmax':maxCEprecipRate, 'CETRMMmin':minCEprecipRate}
+				#else:
+				#	cloudElementDict = {'uniqueID': CEuniqueID, 'cloudElementTime': timelist[t],'cloudElementLatLon': cloudElementLatLons, 'cloudElementCenter':cloudElementCenter, 'cloudElementArea':cloudElementArea, 'cloudElementEccentricity':cloudElementEpsilon, 'cloudElementTmax':TIR_max, 'cloudElementTmin': TIR_min,}
 				
 				#current frame list of CEs
 				currFrameCEs.append(cloudElementDict)
