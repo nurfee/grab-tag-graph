@@ -41,12 +41,16 @@ from scipy.ndimage import map_coordinates
 #LATMAX = '19.0' #max latitude; -ve values in the SH e.g. 5S = -5 20.0
 #LONMIN = '-5.0' #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
 #LONMAX = '9.0' #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
-LATMIN = '-0.02' #min latitude; -ve values in the SH e.g. 5S = -5
-LATMAX = '12.02' #max latitude; -ve values in the SH e.g. 5S = -5 20.0
-LONMIN = '79.98' #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
-LONMAX = '100.02' #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
-XRES = 4.0				#x direction spatial resolution in km
-YRES = 4.0				#y direction spatial resolution in km
+#LATMIN = '-0.02' #min latitude; -ve values in the SH e.g. 5S = -5
+#LATMAX = '12.02' #max latitude; -ve values in the SH e.g. 5S = -5 20.0
+#LONMIN = '79.98' #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
+#LONMAX = '100.02' #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
+LATMIN = '-17.0' #min latitude; -ve values in the SH e.g. 5S = -5
+LATMAX = '17.0' #max latitude; -ve values in the SH e.g. 5S = -5 20.0
+LONMIN = '88.0' #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
+LONMAX = '152.0' #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
+XRES = 8.0				#x direction spatial resolution in km
+YRES = 8.0				#y direction spatial resolution in km
 #TRES = 1 				#temporal resolution in hrs
 TRES = 1				#temporal resolution in hrs
 LAT_DISTANCE = 111.0 	#the avg distance in km for 1deg lat for the region being considered 
@@ -56,10 +60,10 @@ STRUCTURING_ELEMENT = [[0,1,0],[1,1,1],[0,1,0]] #the matrix for determining the 
 #criteria for determining cloud elements and edges
 #T_BB_MAX = 243  #warmest temp to allow (-30C to -55C according to Morel and Sensi 2002)
 T_BB_MAX = 235  #warmest temp to allow (-30C to -55C according to Morel and Sensi 2002)
-T_BB_MIN = 218  #cooler temp for the center of the system
+T_BB_MIN = 208  #218  #cooler temp for the center of the system
 CONVECTIVE_FRACTION = 0.90 #the min temp/max temp that would be expected in a CE.. this is highly conservative (only a 10K difference)
 MIN_MCS_DURATION = 3    #minimum time for a MCS to exist --> number of frame (if data is not hourly, this must be changed)
-AREA_MIN = 2400.0		#minimum area for CE criteria in km^2 according to Vila et al. (2008) is 2400
+AREA_MIN = 5000.0		#minimum area for CE criteria in km^2 according to Vila et al. (2008) is 2400
 MIN_OVERLAP= 10000.00   #km^2  from Williams and Houze 1987, indir ref in Arnaud et al 1992
 
 #---the MCC criteria
@@ -276,12 +280,10 @@ def readMyDataset(dirname, IRtype, filelist=None):
 		lonmaxIndex = (np.where(alllonsraw == lonmaxNETCDF))[0][0]
 
 		#subsetting the data
-		#latsraw = alllatsraw[latminIndex: latmaxIndex]
-		#lonsraw = alllonsraw[lonminIndex:lonmaxIndex]
-		## use all lons and lats --> added on 1 June 2015
-		latsraw = alllatsraw
-		lonsraw = alllonsraw
-
+		latsraw = alllatsraw[latminIndex:latmaxIndex+1]
+		lonsraw = alllonsraw[lonminIndex:lonmaxIndex+1]
+				
+		
 		LON, LAT = np.meshgrid(lonsraw, latsraw)
 
 		#clean up

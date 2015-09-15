@@ -33,10 +33,10 @@ def main():
 	allCETRMMList =[]
 	#DIRS={}
 	DIRS={
-	      "mainDirStr" : "/Users/nsagitap/output/GTG/indo_200701_235K",
+	      "mainDirStr" : "/Users/nsagitap/output/GTG/T235AL3S8P60",
 #	      "TRMMdirName" : "/Users/nsagitap/data/TRMM/201111", 
 	      "TRMMdirName" : None, 
-	      "CEoriDirName" : "/Users/nsagitap/data/MTSAT/Indonesia/200701",
+	      "CEoriDirName" : "/Users/nsagitap/data/MTSAT/Indonesia/200702/S8",
 	     }
 	preprocessing = ''
 	rawMERG = ''
@@ -44,8 +44,8 @@ def main():
 	IRpre = 'tbb_IR1_' # prefix of IR dataset (e.g. for tbb_IR1_yyyymmddhr.nc, type 'tbb_IR1_'; default is none)
 	TRMMtype = '2' # 1 for version 7A, 2 for others
 	TRMMpre = '7' # number of TRMM version (e.g. 7A, 7; default is 7A)
-	startDateTime = '200701010030'
-	endDateTime = '200701102330'
+	startDateTime = '200702010030'
+	endDateTime = '200702282330'
 
 	#for GrADs
 	subprocess.call('export DISPLAY=:0.0', shell=True)

@@ -1,0 +1,61 @@
+Nurfienas-iMac:code nsagitap$ python mccSearchUI.py 
+Running MCCSearch ..... 
+
+> Working directory :  /Users/nsagitap/output/GTG/T235AL3S8P60
+> Directory of MERG netCDF files:  /Users/nsagitap/data/MTSAT/Indonesia/200702/S8
+> Directory of raw TRMM netCDF files:  None
+> Start date time:  200702010030
+> End date time:  200702282330
+> Do you wish to postprocess data? [y/n] 
+n
+--------------------------------------------------------------------------------
+         Starting the MCCSearch Analysis 
+--------------------------------------------------------------------------------
+
+ -------------- Reading MERG and TRMM Data ----------
+
+ -------------- findCloudElements ----------
+number of nodes are:  17147
+number of edges are:  17672
+********************************************************************************
+
+ -------------- findCloudClusters ----------
+pruned graph
+number of nodes are:  14303
+number of edges are:  13275
+********************************************************************************
+
+ -------------- findMCCs ----------
+Traceback (most recent call last):
+  File "mccSearchUI.py", line 380, in <module>
+    main()
+  File "mccSearchUI.py", line 203, in main
+    MCCList,MCSList = mccSearch.findMCC(prunedGraph)
+  File "/Users/nsagitap/script-master/detect_MCS/GTG/grab-tag-graph/code/mccSearch.py", line 1308, in findMCC
+    treeTraversalList = traverseTree(aSubGraph, orderedPath[0],[],[])
+  File "/Users/nsagitap/script-master/detect_MCS/GTG/grab-tag-graph/code/mccSearch.py", line 1442, in traverseTree
+    return traverseTree(subGraph, eachNode, stack, checkedNodes)
+  File "/Users/nsagitap/script-master/detect_MCS/GTG/grab-tag-grap
+  File "/Users/nsagitap/script-master/detect_MCS/GTG/grab-tag-graph/code/mccSearch.py", line 1442, in traverseTree
+    return traverseTree(subGraph, eachNode, stack, checkedNodes)
+  File "/Users/nsagitap/script-master/detect_MCS/GTG/grab-tag-graph/code/mccSearch.py", line 1442, in traverseTree
+    return traverseTree(subGraph, eachNode, stack, checkedNodes)
+  File "/Users/nsagitap/script-master/detect_MCS/GTG/grab-tag-graph/code/mccSearch.py", line 1442, in traverseTree
+    return traverseTree(subGraph, eachNode, stack, checkedNodes)
+  File "/Users/nsagitap/script-master/detect_MCS/GTG/grab-tag-graph/code/mccSearch.py", line 1442, in traverseTree
+    return traverseTree(subGraph, eachNode, stack, checkedNodes)
+  File "/Users/nsagitap/script-master/detect_MCS/GTG/grab-tag-graph/code/mccSearch.py", line 1442, in traverseTree
+    return traverseTree(subGraph, eachNode, stack, checkedNodes)
+  File "/Users/nsagitap/script-master/detect_MCS/GTG/grab-tag-graph/code/mccSearch.py", line 1442, in traverseTree
+    return traverseTree(subGraph, eachNode, stack, checkedNodes)
+  File "/Users/nsagitap/script-master/detect_MCS/GTG/grab-tag-graph/code/mccSearch.py", line 1442, in traverseTree
+    return traverseTree(subGraph, eachNode, stack, checkedNodes)
+  File "/Users/nsagitap/script-master/detect_MCS/GTG/grab-tag-graph/code/mccSearch.py", line 1442, in traverseTree
+    return traverseTree(subGraph, eachNode, stack, checkedNodes)
+  File "/Users/nsagitap/script-master/detect_MCS/GTG/grab-tag-graph/code/mccSearch.py", line 1442, in traverseTree
+    return traverseTree(subGraph, eachNode, stack, checkedNodes)
+  File "/Users/nsagitap/script-master/detect_MCS/GTG/grab-tag-graph/code/mccSearch.py", line 1442, in traverseTree
+    return traverseTree(subGraph, eachNode, stack, checkedNodes)
+  File "/Users/nsagitap/script-master/detect_MCS/GTG/grab-tag-graph/code/mccSearch.py", line 1414, in traverseTree
+    if len(checkedNodes) == len(subGraph):
+RuntimeError: maximum recursion depth exceeded
