@@ -22,21 +22,30 @@ def main():
     MCSMCCNodesList =[]
     allMCSsList =[]
     allCETRMMList =[]
-    DIRS={}
-    # DIRS={
+    #DIRS={}
+    DIRS={
+               "mainDirStr" : "/Users/nsagitap/output/devel/",
+                "TRMMdirName" : None,
+                "CEoriDirName" : "/Users/nsagitap/data/MTSAT/Indonesia/200702/S8"
     #          mainDirStr= "/directory/to/where/to/store/outputs"
     #          TRMMdirName = "/directory/to/the/TRMM/netCDF/files"
     #          CEoriDirName = "/directory/to/the/MERG/netCDF/files"
-    #         }
+             }
     preprocessing = ''
     rawMERG = ''
+    startDateTime   = '200702010030'
+    endDateTime     = '200702010630'
 
     #for GrADs
     subprocess.call('export DISPLAY=:0.0', shell=True)
 
 
     print "Running MCCSearch ..... \n"
-    DIRS['mainDirStr'] = raw_input("> Please enter working directory: \n" )   # This is where data created will be stored
+    # Main Directory
+    if not 'mainDirStr' in DIRS.keys():
+        DIRS['mainDirStr'] = raw_input("> Please enter working directory: \n" )   # This is where data created will be stored
+    else:
+        print "> Working directory : ", DIRS['mainDirStr']
 
     preprocessing = raw_input ("> Do you need to preprocess the MERG files? [y/n]: \n")
     while preprocessing.lower() != 'n':
@@ -54,8 +63,11 @@ def main():
 
 
     #get the location of the MERG and TRMM data
-    DIRS['CEoriDirName'] = raw_input("> Please enter the directory to the MERG netCDF files: \n")
-
+    ## MERG.nc directory
+    if not 'CEoriDirName' in DIRS.keys():
+        DIRS['CEoriDirName'] = raw_input("> Please enter the directory to the MERG netCDF files: \n")
+    else:
+        print "> Directory of MERG netCDF files: ", DIRS['CEoriDirName']
     try:
         if not os.path.exists(DIRS['CEoriDirName']):
             print "Error! MERG invalid path!"
@@ -64,7 +76,11 @@ def main():
         print "..."
 
 
-    DIRS['TRMMdirName'] = raw_input("> Please enter the location to the raw TRMM netCDF files: \n")
+    ## TRMM.nc directory
+    if not 'TRMMdirName' in DIRS.keys():
+        DIRS['TRMMdirName'] = raw_input("> Please enter the location to the raw TRMM netCDF files: \n")
+    else:
+        print "> Directory of raw TRMM netCDF files: ", DIRS['TRMMdirName']
     try:
         if not os.path.exists(DIRS['TRMMdirName']):
             print "Error: TRMM invalid path!"
@@ -73,28 +89,36 @@ def main():
         pass
 
     #get the dates for analysis
-    startDateTime = raw_input("> Please enter the start date and time yyyymmddhrmm: \n")
+    ## Start date time
+    if not startDateTime:
+        startDateTime = raw_input("> Please enter the start date and time yyyymmddhrmm: \n")
+    else:
+        print "> Start date time: ", startDateTime
     #check validity of time
     while utils.valid_date(startDateTime) != True:
         print "Invalid time entered for startDateTime!"
         startDateTime = raw_input("> Please enter the start date and time yyyymmddhrmm: \n")
 
-    endDateTime = raw_input("> Please enter the end date and time yyyymmddhrmm: \n")
+    ## End date time
+    if not endDateTime:
+        endDateTime = raw_input("> Please enter the end date and time yyyymmddhrmm: \n")
+    else:
+        print "> End date time: ", endDateTime
     while utils.valid_date(endDateTime) != True:
         print "Invalid time entered for endDateTime!"
         endDateTime = raw_input("> Please enter the end date and time yyyymmddhrmm: \n")
 
     #check if all the files exisits in the MERG and TRMM directories entered
     #test,_ = iomethods.check_for_files(startDateTime, endDateTime, DIRS['TRMMdirName'], 2)
-    test,_ = iomethods.check_for_files(DIRS['TRMMdirName'], startDateTime, endDateTime, 3, 'hour')
-    if test == False:
-        print "Error with files in the original MERG directory entered. Please check your files before restarting. "
-        return
+    if DIRS['TRMMdirName']:
+        test,_ = iomethods.check_for_files(DIRS['TRMMdirName'], startDateTime, endDateTime, 3, 'hour')
+        if test == False:
+            print "Error with files in the original TRMM directory entered. Please check your files before restarting. "
+            return
     #test,filelist = iomethods.check_for_files(startDateTime, endDateTime, DIRS['CEoriDirName'],1)
     test,filelist = iomethods.check_for_files(DIRS['CEoriDirName'], startDateTime, endDateTime, 1, 'hour')
-
     if test == False:
-        print "Error with files in the original TRMM directory entered. Please check your files before restarting. "
+        print "Error with files in the original MERG directory entered. Please check your files before restarting. "
         return
 
     #create main directory and file structure for storing intel
@@ -119,7 +143,8 @@ def main():
     print "\t\t Starting the MCCSearch Analysis "
     print ("-"*80)
     print "\n -------------- Reading MERG and TRMM Data ----------"
-    mergImgs, timeList, LAT, LON = iomethods.read_data(DIRS['CEoriDirName'],'ch4','latitude','longitude', filelist)
+#    mergImgs, timeList, LAT, LON = iomethods.read_data(DIRS['CEoriDirName'],'ch4','latitude','longitude', filelist)
+    mergImgs, timeList, LAT, LON = iomethods.read_data(DIRS['CEoriDirName'],'tbb','lat','lon', filelist)
     print "\n -------------- findCloudElements ----------"
     CEGraph = mccSearch.find_cloud_elements(mergImgs,timeList,DIRS['mainDirStr'], LAT,LON,DIRS['TRMMdirName'])
     #theList = CEGraph.successors(node)
