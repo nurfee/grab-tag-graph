@@ -1,0 +1,72 @@
+Nurfienas-iMac:code nsagitap$ python mccSearchUI.py
+Running MCCSearch ..... 
+
+> Working directory :  /Users/nsagitap/output/devel/
+> Do you need to preprocess the MERG files? [y/n]: 
+n
+> Directory of MERG netCDF files:  /Users/nsagitap/data/MTSAT/Indonesia/200702/S8
+> Directory of raw TRMM netCDF files:  None
+> Start date time:  200702010030
+> End date time:  200702010630
+Directory exists already!!!
+> Do you wish to postprocess data? [y/n] 
+n
+--------------------------------------------------------------------------------
+         Starting the MCCSearch Analysis 
+--------------------------------------------------------------------------------
+
+ -------------- Reading MERG and TRMM Data ----------
+
+ -------------- findCloudElements ----------
+number of nodes are:  88
+number of edges are:  76
+********************************************************************************
+
+ -------------- findCloudClusters ----------
+pruned graph
+number of nodes are:  64
+number of edges are:  54
+********************************************************************************
+
+ -------------- findMCCs ----------
+F1CE12 1
+F2CE10 3
+F3CE7 3
+F2CE23 3
+F4CE15 3
+F3CE28 3
+F5CE17 3
+F4CE34 3
+F6CE30 3
+F5CE48 3
+F5CE49 3
+F7CE14 3
+F1CE31 1
+F2CE22 3
+F3CE27 3
+F4CE38 3
+F5CE44 3
+F6CE41 3
+F1CE41 1
+F2CE33 3
+F3CE34 3
+F4CE46 3
+F5CE58 3
+F6CE48 3
+F5CE62 3
+F7CE48 3
+F1CE4 1
+Traceback (most recent call last):
+  File "mccSearchUI.py", line 296, in <module>
+    main()
+  File "mccSearchUI.py", line 162, in main
+    MCCList,MCSList = mccSearch.find_MCC(prunedGraph)
+  File "/Users/nsagitap/script-master/detect_MCS/GTG/gtg_v3/code/mccSearch.py", line 782, in find_MCC
+    MCCList = checked_nodes_MCC(prunedGraph, treeTraversalList)
+  File "/Users/nsagitap/script-master/detect_MCS/GTG/gtg_v3/code/mccSearch.py", line 963, in checked_nodes_MCC
+    cloudElementAreaA, _ = check_criteria(thisdict['cloudElementLatLon'], OUTER_CLOUD_SHIELD_TEMPERATURE)
+  File "/Users/nsagitap/script-master/detect_MCS/GTG/gtg_v3/code/mccSearch.py", line 1371, in check_criteria
+    _, ceCounter = ndimage.measurements.label(thisCloudElementLatLon, structure=STRUCTURING_ELEMENT)
+  File "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/scipy/ndimage/measurements.py", line 151, in label
+    raise RuntimeError('structure and input must have equal rank')
+RuntimeError: structure and input must have equal rank
