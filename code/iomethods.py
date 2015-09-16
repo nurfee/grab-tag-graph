@@ -17,12 +17,18 @@ import utils
 # --------------------- User defined variables ---------------------
 #FYI the lat lon values are not necessarily inclusive of the points given. These are the limits
 #the first point closest the the value (for the min) from the MERG data is used, etc.
-LATMIN = '5.0' #min latitude; -ve values in the SH e.g. 5S = -5
-LATMAX = '19.0' #max latitude; -ve values in the SH e.g. 5S = -5 20.0
-LONMIN = '-5.0' #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
-LONMAX = '9.0' #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
-XRES = 4.0              #x direction spatial resolution in km
-YRES = 4.0              #y direction spatial resolution in km
+#LATMIN = '5.0' #min latitude; -ve values in the SH e.g. 5S = -5
+#LATMAX = '19.0' #max latitude; -ve values in the SH e.g. 5S = -5 20.0
+#LONMIN = '-5.0' #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
+#LONMAX = '9.0' #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
+#XRES = 4.0              #x direction spatial resolution in km
+#YRES = 4.0              #y direction spatial resolution in km
+LATMIN = '-17.0'        #min latitude; -ve values in the SH e.g. 5S = -5
+LATMAX = '17.0'         #max latitude; -ve values in the SH e.g. 5S = -5 20.0
+LONMIN = '88.0'         #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
+LONMAX = '152.0'        #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
+XRES = 8.0              #x direction spatial resolution in km
+YRES = 8.0              #y direction spatial resolution in km
 TRES = 1                #temporal resolution in hrs
 LAT_DISTANCE = 111.0    #the avg distance in km for 1deg lat for the region being considered
 LON_DISTANCE = 111.0    #the avg distance in km for 1deg lon for the region being considered
@@ -301,10 +307,12 @@ def read_data(dirName, varName, latName, lonName, filelist=None):
             thisFile = Dataset(files, 'r', format='NETCDF4')
             #clip the dataset according to user lat,lon coordinates
             #mask the data and fill with zeros for later
-            tempRaw = thisFile.variables[varName][:, latminIndex:latmaxIndex, lonminIndex:lonmaxIndex].astype('int16')
+            #tempRaw = thisFile.variables[varName][:, latminIndex:latmaxIndex, lonminIndex:lonmaxIndex].astype('int16')
+            tempRaw = thisFile.variables[varName][:, latminIndex:latmaxIndex, lonminIndex:lonmaxIndex].astype('f8')
             tempMask = ma.masked_array(tempRaw, mask=(tempRaw > T_BB_MAX), fill_value=0)
             #get the actual values that the mask returned
-            tempMaskedValue = ma.zeros((tempRaw.shape)).astype('int16')
+            #tempMaskedValue = ma.zeros((tempRaw.shape)).astype('int16')
+            tempMaskedValue = ma.zeros((tempRaw.shape)).astype('f8')
 
             for index, value in utils.maenumerate(tempMask):
                 timeIndex, latIndex, lonIndex = index
@@ -314,7 +322,7 @@ def read_data(dirName, varName, latName, lonName, filelist=None):
 
             #convert this time to a python datastring
             time2store, _ = get_model_times(xtimes, timeName)
-
+            
             #extend instead of append because get_model_times returns a list already and we don't
             #want a list of list
             timelist.extend(time2store)
@@ -429,7 +437,9 @@ def get_model_time_step(units, stepSize):
     '''
 
     if units == 'minutes':
-        if stepSize == 60:
+        if stepSize == 0:
+            modelTimeStep = 'minutes'
+        elif stepSize == 60:
             modelTimeStep = 'hourly'
         elif stepSize == 1440:
             modelTimeStep = 'daily'
@@ -501,15 +511,23 @@ def decode_time_from_string(timeString):
     else:
         pass
 
-    try:
-        if datetime.strptime(timeString, '%Y-%m-%d %H'):
-            myTime = datetime.strptime(timeString, '%Y-%m-%d %H')
-        elif datetime.strptime(timeString, '%Y-%m-%d %H%M'):
-            myTime = datetime.strptime(timeString, '%Y-%m-%d %H%M')
-        return myTime
+    timeFormats = ['%Y-%m-%d %H', '%Y-%m-%d %H%M', '%Y-%m-%d %H:%M']
+    for timeFormat in timeFormats:
+        try:
+            myTime = datetime.strptime(timeString, timeFormat)
+            return myTime
+        except:
+            pass
 
-    except ValueError:
-        pass
+    #try:
+    #    if datetime.strptime(timeString, '%Y-%m-%d %H'):
+    #        myTime = datetime.strptime(timeString, '%Y-%m-%d %H')
+    #    elif datetime.strptime(timeString, '%Y-%m-%d %H:%M'):
+    #        myTime = datetime.strptime(timeString, '%Y-%m-%d %H:%M')
+    #    return myTime
+
+    #except ValueError:
+    #    pass
 
     print 'Error decoding time string: string does not match a predefined time format'
     return 0

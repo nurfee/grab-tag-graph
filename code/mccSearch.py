@@ -200,7 +200,7 @@ def find_cloud_elements(mergImgs, timelist, mainStrDir, lat, lon, TRMMdirName=No
                 times.units = 'hours since '+ str(timelist[t])[:-6]
                 latitudes = currNetCDFCEData.createVariable('latitude', 'f8', ('lat',))
                 longitudes = currNetCDFCEData.createVariable('longitude', 'f8', ('lon',))
-                brightnesstemp = currNetCDFCEData.createVariable('brightnesstemp', 'i16', tempDims)
+                brightnesstemp = currNetCDFCEData.createVariable('brightnesstemp', 'f8', tempDims)
                 brightnesstemp.units = 'Kelvin'
                 # NETCDF data
                 dates = [timelist[t] + timedelta(hours=0)]
@@ -214,7 +214,7 @@ def find_cloud_elements(mergImgs, timelist, mainStrDir, lat, lon, TRMMdirName=No
                 latitudes.long_name = 'Latitude'
 
                 #generate array of zeros for brightness temperature
-                brightnesstemp1 = ma.zeros((1, len(latitudes), len(longitudes))).astype('int16')
+                brightnesstemp1 = ma.zeros((1, len(latitudes), len(longitudes))).astype('f8')
                 #-----------End most of NETCDF file stuff ------------------------------------
 
                 #if other dataset (TRMM) assumed to be a precipitation dataset was entered
@@ -778,6 +778,7 @@ def find_MCC(prunedGraph):
             treeTraversalList = traverse_tree(aSubGraph, orderedPath[0], [], [])
             #print 'treeTraversalList is ', treeTraversalList
             #check the nodes to determine if a MCC on just the area criteria (consecutive nodes meeting the area and temp requirements)
+
             MCCList = checked_nodes_MCC(prunedGraph, treeTraversalList)
             for aDict in MCCList:
                 for eachNode in aDict['fullMCSMCC']:
@@ -950,6 +951,8 @@ def checked_nodes_MCC(prunedGraph, nodeList):
         counterCriteriaAFlag = False
         counterCriteriaBFlag = False
         #existingFrameFlag = False
+
+        print node, np.linalg.matrix_rank(thisdict['cloudElementLatLon'])
 
         if thisdict['cloudElementArea'] >= OUTER_CLOUD_SHIELD_AREA:
             counterCriteriaAFlag = True
