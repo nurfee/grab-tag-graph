@@ -18,12 +18,18 @@ import plotting
 # --------------------- User defined variables ---------------------
 #FYI the lat lon values are not necessarily inclusive of the points given. These are the limits
 #the first point closest the the value (for the min) from the MERG data is used, etc.
-LATMIN = '5.0' #min latitude; -ve values in the SH e.g. 5S = -5
-LATMAX = '19.0' #max latitude; -ve values in the SH e.g. 5S = -5 20.0
-LONMIN = '-5.0' #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
-LONMAX = '9.0' #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
-XRES = 4.0              #x direction spatial resolution in km
-YRES = 4.0              #y direction spatial resolution in km
+#LATMIN = '5.0' #min latitude; -ve values in the SH e.g. 5S = -5
+#LATMAX = '19.0' #max latitude; -ve values in the SH e.g. 5S = -5 20.0
+#LONMIN = '-5.0' #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
+#LONMAX = '9.0' #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
+#XRES = 4.0              #x direction spatial resolution in km
+#YRES = 4.0              #y direction spatial resolution in km
+LATMIN = '-17.0'        #min latitude; -ve values in the SH e.g. 5S = -5
+LATMAX = '17.0'         #max latitude; -ve values in the SH e.g. 5S = -5 20.0
+LONMIN = '88.0'         #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
+LONMAX = '152.0'        #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
+XRES = 8.0              #x direction spatial resolution in km
+YRES = 8.0              #y direction spatial resolution in km
 TRES = 1                #temporal resolution in hrs
 LAT_DISTANCE = 111.0    #the avg distance in km for 1deg lat for the region being considered
 LON_DISTANCE = 111.0    #the avg distance in km for 1deg lon for the region being considered
@@ -32,11 +38,11 @@ STRUCTURING_ELEMENT = [[0, 1, 0],
                        [0, 1, 0]
                       ] #the matrix for determining the pattern for the contiguous boxes and must
                         #have same rank of the matrix it is being compared against
-                        #criteria for determining cloud elements and edges
+#criteria for determining cloud elements and edges
 T_BB_MAX = 243  #warmest temp to allow (-30C to -55C according to Morel and Sensi 2002)
 T_BB_MIN = 218  #cooler temp for the center of the system
-CONVECTIVE_FRACTION = 0.90 #the min temp/max temp that would be expected in a CE.. this is highly
-                           #conservative (only a 10K difference)
+CONVECTIVE_FRACTION = 0.90 #the min temp/max temp that would be expected in a CE
+                           #this is highly conservative (only a 10K difference)
 MIN_MCS_DURATION = 3    #minimum time for a MCS to exist
 AREA_MIN = 2400.0       #minimum area for CE criteria in km^2 according to Vila et al. (2008) is 2400
 MIN_OVERLAP = 10000.00   #km^2  from Williams and Houze 1987, indir ref in Arnaud et al 1992
@@ -413,46 +419,46 @@ def find_cloud_elements(mergImgs, timelist, mainStrDir, lat, lon, TRMMdirName=No
                         elif areaOverlap >= MIN_OVERLAP:
                             CLOUD_ELEMENT_GRAPH.add_edge(cloudElementDict['uniqueID'], ceUniqueID, weight=edgeWeight[2])
 
-                else:
-                    #TODO: remove this else as we only wish for the CE details
-                    #ensure only the non-zero elements are considered
-                    #store intel in allCE file
-                    labels, _ = ndimage.label(cloudElement)
-                    cloudElementsFile.write('\n-----------------------------------------------')
-                    cloudElementsFile.write('\n\nTime is: %s' %(str(timelist[t])))
-                    # cloudElementLat = LAT[loc[0],0]
-                    # cloudElementLon = LON[0,loc[1]]
+            else:
+                #TODO: remove this else as we only wish for the CE details
+                #ensure only the non-zero elements are considered
+                #store intel in allCE file
+                labels, _ = ndimage.label(cloudElement)
+                cloudElementsFile.write('\n-----------------------------------------------')
+                cloudElementsFile.write('\n\nTime is: %s' %(str(timelist[t])))
+                # cloudElementLat = LAT[loc[0],0]
+                # cloudElementLon = LON[0,loc[1]]
 
-                    #populate cloudElementLatLons by unpacking the original values from loc
-                    #TODO: KDW - too dirty... play with itertools.izip or zip and the enumerate with this
-                    #           as cloudElement is masked
-                    for index, value in np.ndenumerate(cloudElement):
-                        if value != 0 :
-                            latIndex, lonIndex = index
-                            latLonTuple = (cloudElementLat[latIndex], cloudElementLon[lonIndex])
-                            cloudElementLatLons.append(latLonTuple)
+                #populate cloudElementLatLons by unpacking the original values from loc
+                #TODO: KDW - too dirty... play with itertools.izip or zip and the enumerate with this
+                #           as cloudElement is masked
+                for index, value in np.ndenumerate(cloudElement):
+                    if value != 0 :
+                        latIndex, lonIndex = index
+                        latLonTuple = (cloudElementLat[latIndex], cloudElementLon[lonIndex])
+                        cloudElementLatLons.append(latLonTuple)
 
-                    cloudElementsFile.write('\nLocation of rejected CE (lat,lon) points are: %s' % cloudElementLatLons)
-                    #latCenter and lonCenter are given according to the particular array defining this CE
-                    #so you need to convert this value to the overall domain truth
-                    latCenter, lonCenter = ndimage.measurements.center_of_mass(cloudElement, labels=labels)
-                    latCenter = cloudElementLat[round(latCenter)]
-                    lonCenter = cloudElementLon[round(lonCenter)]
-                    cloudElementsFile.write('\nCenter (lat,lon) is: %.2f\t%.2f' % (latCenter, lonCenter))
-                    cloudElementsFile.write('\nNumber of boxes are: %d' % numOfBoxes)
-                    cloudElementsFile.write('\nArea is: %.4f km^2' % (cloudElementArea, ))
-                    cloudElementsFile.write('\nAverage brightness temperature is: %.4f K' % ndimage.mean(cloudElement, \
-                        labels=labels))
-                    cloudElementsFile.write('\nMin brightness temperature is: %.4f K' % ndimage.minimum(cloudElement, \
-                        labels=labels))
-                    cloudElementsFile.write('\nMax brightness temperature is: %.4f K' % ndimage.maximum(cloudElement, \
-                        labels=labels))
-                    cloudElementsFile.write('\nBrightness temperature variance is: %.4f K' \
-                        % ndimage.variance(cloudElement, labels=labels))
-                    cloudElementsFile.write('\nConvective fraction is: %.4f ' % (((ndimage.minimum(cloudElement, \
-                        labels=labels))/float((ndimage.maximum(cloudElement, labels=labels))))*100.0))
-                    cloudElementsFile.write('\nEccentricity is: %.4f ' % (cloudElementEpsilon))
-                    cloudElementsFile.write('\n-----------------------------------------------')
+                cloudElementsFile.write('\nLocation of rejected CE (lat,lon) points are: %s' % cloudElementLatLons)
+                #latCenter and lonCenter are given according to the particular array defining this CE
+                #so you need to convert this value to the overall domain truth
+                latCenter, lonCenter = ndimage.measurements.center_of_mass(cloudElement, labels=labels)
+                latCenter = cloudElementLat[round(latCenter)]
+                lonCenter = cloudElementLon[round(lonCenter)]
+                cloudElementsFile.write('\nCenter (lat,lon) is: %.2f\t%.2f' % (latCenter, lonCenter))
+                cloudElementsFile.write('\nNumber of boxes are: %d' % numOfBoxes)
+                cloudElementsFile.write('\nArea is: %.4f km^2' % (cloudElementArea, ))
+                cloudElementsFile.write('\nAverage brightness temperature is: %.4f K' % ndimage.mean(cloudElement, \
+                    labels=labels))
+                cloudElementsFile.write('\nMin brightness temperature is: %.4f K' % ndimage.minimum(cloudElement, \
+                    labels=labels))
+                cloudElementsFile.write('\nMax brightness temperature is: %.4f K' % ndimage.maximum(cloudElement, \
+                    labels=labels))
+                cloudElementsFile.write('\nBrightness temperature variance is: %.4f K' \
+                    % ndimage.variance(cloudElement, labels=labels))
+                cloudElementsFile.write('\nConvective fraction is: %.4f ' % (((ndimage.minimum(cloudElement, \
+                    labels=labels))/float((ndimage.maximum(cloudElement, labels=labels))))*100.0))
+                cloudElementsFile.write('\nEccentricity is: %.4f ' % (cloudElementEpsilon))
+                cloudElementsFile.write('\n-----------------------------------------------')
 
             #reset list for the next CE
             cloudElementCenter = []
@@ -951,8 +957,6 @@ def checked_nodes_MCC(prunedGraph, nodeList):
         counterCriteriaAFlag = False
         counterCriteriaBFlag = False
         #existingFrameFlag = False
-
-        print node, np.linalg.matrix_rank(thisdict['cloudElementLatLon'])
 
         if thisdict['cloudElementArea'] >= OUTER_CLOUD_SHIELD_AREA:
             counterCriteriaAFlag = True
