@@ -15,6 +15,9 @@ import plotting
 import metrics
 import iomethods
 
+#tic-toc
+import time
+
 def main():
     sys.setrecursionlimit(2000)
     
@@ -145,6 +148,9 @@ def main():
     print ("-"*80)
     print "\t\t Starting the MCCSearch Analysis "
     print ("-"*80)
+	
+    stim = time.time() # tic
+    
     print "\n -------------- Reading MERG and TRMM Data ----------"
 #    mergImgs, timeList, LAT, LON = iomethods.read_data(DIRS['CEoriDirName'],'ch4','latitude','longitude', filelist)
     mergImgs, timeList, LAT, LON = iomethods.read_data(DIRS['CEoriDirName'],'tbb','lat','lon', filelist)
@@ -166,6 +172,10 @@ def main():
     #some calculations/metrics that work that work
     print "creating the MCC userfile ", metrics.create_text_file(MCCList,1, DIRS['mainDirStr'], 80000.0, 1)
     print "creating the MCS userfile ", metrics.create_text_file(MCSList,2, DIRS['mainDirStr'], 80000.0, 1)
+
+    etim = time.time() #toc
+    print "Elapsed time: ", etim-stim, " second"
+
     plot_menu(MCCList, MCSList, DIRS)
 
     #Let's get outta here! Engage!
