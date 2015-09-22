@@ -204,8 +204,8 @@ def create_text_file(finalMCCList, identifier, MAIN_DIRECTORY, OUTER_CLOUD_SHIEL
             thisNode = mccSearch.this_dict(eachNode)
             #set first time min 'fake' values
             if firstTime == True:
-                minCEprecipRate = thisNode['CETRMMmin']
-                avgMinmcsPrecipRate += thisNode['CETRMMmin']
+                ##minCEprecipRate = thisNode['CETRMMmin']
+                ##avgMinmcsPrecipRate += thisNode['CETRMMmin']
                 firstTime = False
             #calculate the speed
             # if thisNode['cloudElementArea'] >= OUTER_CLOUD_SHIELD_AREA:
@@ -225,11 +225,11 @@ def create_text_file(finalMCCList, identifier, MAIN_DIRECTORY, OUTER_CLOUD_SHIEL
                     matureFlag = False
 
             #find min and max precip rate
-            if thisNode['CETRMMmin'] < minCEprecipRate:
-                minCEprecipRate = thisNode['CETRMMmin']
+            ##if thisNode['CETRMMmin'] < minCEprecipRate:
+            ##    minCEprecipRate = thisNode['CETRMMmin']
 
-            if thisNode['CETRMMmax'] > maxCEprecipRate:
-                maxCEprecipRate = thisNode['CETRMMmax']
+            ##if thisNode['CETRMMmax'] > maxCEprecipRate:
+            ##    maxCEprecipRate = thisNode['CETRMMmax']
 
             #if MCC, then calculate for only mature phase else, calculate for full MCS
             if identifier == 1:
@@ -240,22 +240,22 @@ def create_text_file(finalMCCList, identifier, MAIN_DIRECTORY, OUTER_CLOUD_SHIEL
                         averageArea += thisNode['cloudElementArea']
                         averageAreaCounter += 1
                         durationOfMatureMCC += 1
-                        avgMaxPrecipRate += thisNode['CETRMMmax']
-                        avgMaxPrecipRateCounter += 1
-                        avgMinPrecipRate += thisNode['CETRMMmin']
-                        avgMinPrecipRateCounter += 1
-                        avgMaxmcsPrecipRate += thisNode['CETRMMmax']
-                        avgMaxmcsPrecipRateCounter += 1
-                        avgMinmcsPrecipRate += thisNode['CETRMMmin']
-                        avgMinmcsPrecipRateCounter += 1
+                        ##avgMaxPrecipRate += thisNode['CETRMMmax']
+                        ##avgMaxPrecipRateCounter += 1
+                        ##avgMinPrecipRate += thisNode['CETRMMmin']
+                        ##avgMinPrecipRateCounter += 1
+                        ##avgMaxmcsPrecipRate += thisNode['CETRMMmax']
+                        ##avgMaxmcsPrecipRateCounter += 1
+                        ##avgMinmcsPrecipRate += thisNode['CETRMMmin']
+                        ##avgMinmcsPrecipRateCounter += 1
 
                         #the precip percentage (TRMM area/CE area)
-                        if thisNode['cloudElementArea'] >= 0.0 and thisNode['TRMMArea'] >= 0.0:
-                            precipArea += thisNode['TRMMArea']
-                            avgPrecipArea.append(thisNode['TRMMArea'])
-                            avgPrecipAreaPercent += (thisNode['TRMMArea']/thisNode['cloudElementArea'])
-                            precipPercent.append((thisNode['TRMMArea']/thisNode['cloudElementArea']))
-                            precipCounter += 1
+                        ##if thisNode['cloudElementArea'] >= 0.0 and thisNode['TRMMArea'] >= 0.0:
+                            ##precipArea += thisNode['TRMMArea']
+                            ##avgPrecipArea.append(thisNode['TRMMArea'])
+                            ##avgPrecipAreaPercent += (thisNode['TRMMArea']/thisNode['cloudElementArea'])
+                            ##precipPercent.append((thisNode['TRMMArea']/thisNode['cloudElementArea']))
+                            ##precipCounter += 1
 
                         #system speed for only mature stage
                         # cloudElementSpeed = find_cloud_element_speed(eachNode,eachPath)
@@ -264,30 +264,30 @@ def create_text_file(finalMCCList, identifier, MAIN_DIRECTORY, OUTER_CLOUD_SHIEL
                         #   mcsSpeedCounter += 1
                 except:
                     print 'MCS node has no nodeMCSIdentifier ', thisNode['uniqueID']
-                    avgMaxmcsPrecipRate += thisNode['CETRMMmax']
-                    avgMaxmcsPrecipRateCounter += 1
-                    avgMinmcsPrecipRate += thisNode['CETRMMmin']
-                    avgMinmcsPrecipRateCounter += 1
+                    ##avgMaxmcsPrecipRate += thisNode['CETRMMmax']
+                    ##avgMaxmcsPrecipRateCounter += 1
+                    ##avgMinmcsPrecipRate += thisNode['CETRMMmin']
+                    ##avgMinmcsPrecipRateCounter += 1
             else:
                 averageArea += thisNode['cloudElementArea']
                 averageAreaCounter += 1
                 durationOfMatureMCC += 1
-                avgMaxPrecipRate += thisNode['CETRMMmax']
-                avgMaxPrecipRateCounter += 1
-                avgMinPrecipRate += thisNode['CETRMMmin']
-                avgMinPrecipRateCounter += 1
-                avgMaxmcsPrecipRate += thisNode['CETRMMmax']
-                avgMaxmcsPrecipRateCounter += 1
-                avgMinmcsPrecipRate += thisNode['CETRMMmin']
-                avgMinmcsPrecipRateCounter += 1
+                ##avgMaxPrecipRate += thisNode['CETRMMmax']
+                ##avgMaxPrecipRateCounter += 1
+                ##avgMinPrecipRate += thisNode['CETRMMmin']
+                ##avgMinPrecipRateCounter += 1
+                ##avgMaxmcsPrecipRate += thisNode['CETRMMmax']
+                ##avgMaxmcsPrecipRateCounter += 1
+                ##avgMinmcsPrecipRate += thisNode['CETRMMmin']
+                ##avgMinmcsPrecipRateCounter += 1
 
             #the precip percentage (TRMM area/CE area)
-            if thisNode['cloudElementArea'] >= 0.0 and thisNode['TRMMArea'] >= 0.0:
-                precipArea += thisNode['TRMMArea']
-                avgPrecipArea.append(thisNode['TRMMArea'])
-                avgPrecipAreaPercent += (thisNode['TRMMArea']/thisNode['cloudElementArea'])
-                precipPercent.append((thisNode['TRMMArea']/thisNode['cloudElementArea']))
-                precipCounter += 1
+            ##if thisNode['cloudElementArea'] >= 0.0 and thisNode['TRMMArea'] >= 0.0:
+                ##precipArea += thisNode['TRMMArea']
+                ##avgPrecipArea.append(thisNode['TRMMArea'])
+                ##avgPrecipAreaPercent += (thisNode['TRMMArea']/thisNode['cloudElementArea'])
+                ##precipPercent.append((thisNode['TRMMArea']/thisNode['cloudElementArea']))
+                ##precipCounter += 1
 
             #system speed for only mature stage
             # cloudElementSpeed = find_cloud_element_speed(eachNode,eachPath)
@@ -296,9 +296,9 @@ def create_text_file(finalMCCList, identifier, MAIN_DIRECTORY, OUTER_CLOUD_SHIEL
             #   mcsSpeedCounter += 1
 
             #find accumulated precip
-            if thisNode['cloudElementPrecipTotal'] > 0.0:
-                mcsPrecipTotal += thisNode['cloudElementPrecipTotal']
-                avgmcsPrecipTotalCounter += 1
+            ##if thisNode['cloudElementPrecipTotal'] > 0.0:
+                ##mcsPrecipTotal += thisNode['cloudElementPrecipTotal']
+                ##avgmcsPrecipTotalCounter += 1
 
         #A: calculate the average Area of the (mature) MCS
         if averageAreaCounter > 0: # and averageAreaCounter > 0:
@@ -310,12 +310,12 @@ def create_text_file(finalMCCList, identifier, MAIN_DIRECTORY, OUTER_CLOUD_SHIEL
             mcsSpeed /= mcsSpeedCounter
 
         #smallP_max: calculate the average max precip rate (mm/h)
-        if avgMaxmcsPrecipRateCounter > 0: #and avgMaxPrecipRate > 0.0:
-            avgMaxmcsPrecipRate /= avgMaxmcsPrecipRateCounter
+        ##if avgMaxmcsPrecipRateCounter > 0: #and avgMaxPrecipRate > 0.0:
+            ##avgMaxmcsPrecipRate /= avgMaxmcsPrecipRateCounter
 
         #smallP_min: calculate the average min precip rate (mm/h)
-        if avgMinmcsPrecipRateCounter > 0: #and avgMinPrecipRate > 0.0:
-            avgMinmcsPrecipRate /= avgMinmcsPrecipRateCounter
+        ##if avgMinmcsPrecipRateCounter > 0: #and avgMinPrecipRate > 0.0:
+            ##avgMinmcsPrecipRate /= avgMinmcsPrecipRateCounter
 
         #smallP_avg: calculate the average precipitation (mm hr-1)
         if mcsPrecipTotal > 0.0: # and avgmcsPrecipTotalCounter> 0:
@@ -351,14 +351,14 @@ def create_text_file(finalMCCList, identifier, MAIN_DIRECTORY, OUTER_CLOUD_SHIEL
         mcsUserFile.write('\nEccentricity at max area is: %.4f ' %(eccentricity))
         mcsUserFile.write('\nCenter (lat,lon) at max area is: %.2f\t%.2f' %(location[0], location[1]))
         mcsUserFile.write('\nPropagation speed is %.4f ' %(mcsSpeed))
-        mcsUserFile.write('\nMCS minimum preicip rate is %.4f mmh^-1' %(minCEprecipRate))
-        mcsUserFile.write('\nMCS maximum preicip rate is %.4f mmh^-1' %(maxCEprecipRate))
-        mcsUserFile.write('\nTotal precipitation during MCS is %.4f mm/lifetime' %(mcsPrecipTotal))
-        mcsUserFile.write('\nAverage MCS precipitation is %.4f mm' %(avgmcsPrecipTotal))
-        mcsUserFile.write('\nAverage MCS maximum precipitation is %.4f mmh^-1' %(avgMaxmcsPrecipRate))
-        mcsUserFile.write('\nAverage MCS minimum precipitation is %.4f mmh^-1' %(avgMinmcsPrecipRate))
-        mcsUserFile.write('\nAverage precipitation area is %.4f km^2 ' %(precipArea))
-        mcsUserFile.write('\nPrecipitation area percentage of mature system %.4f percent ' %(avgPrecipAreaPercent*100))
+        ##mcsUserFile.write('\nMCS minimum preicip rate is %.4f mmh^-1' %(minCEprecipRate))
+        ##mcsUserFile.write('\nMCS maximum preicip rate is %.4f mmh^-1' %(maxCEprecipRate))
+        ##mcsUserFile.write('\nTotal precipitation during MCS is %.4f mm/lifetime' %(mcsPrecipTotal))
+        ##mcsUserFile.write('\nAverage MCS precipitation is %.4f mm' %(avgmcsPrecipTotal))
+        ##mcsUserFile.write('\nAverage MCS maximum precipitation is %.4f mmh^-1' %(avgMaxmcsPrecipRate))
+        ##mcsUserFile.write('\nAverage MCS minimum precipitation is %.4f mmh^-1' %(avgMinmcsPrecipRate))
+        ##mcsUserFile.write('\nAverage precipitation area is %.4f km^2 ' %(precipArea))
+        ##mcsUserFile.write('\nPrecipitation area percentage of mature system %.4f percent ' %(avgPrecipAreaPercent*100))
 
 
         #append stuff to lists for the summary file
@@ -458,11 +458,11 @@ def create_text_file(finalMCCList, identifier, MAIN_DIRECTORY, OUTER_CLOUD_SHIEL
     mcsSummaryFile.write('\nAverage propagation speed is %.4f ms^-1' %(averagePropagationSpeed))
     mcsSummaryFile.write('\nMaximum propagation speed is %.4f ms^-1 ' %(maxSpeed))
     mcsSummaryFile.write('\nMinimum propagation speed is %.4f ms^-1 ' %(minSpeed))
-    mcsSummaryFile.write('\nAverage minimum precipitation rate is %.4f mmh^-1' %(avgMinPrecipRate))
-    mcsSummaryFile.write('\nAverage maximum precipitation rate is %.4f mm h^-1' %(avgMaxPrecipRate))
-    mcsSummaryFile.write('\nAverage precipitation is %.4f mm ' %(avgPrecipTotal))
-    mcsSummaryFile.write('\nAverage total precipitation during MCSs is %.4f mm/LD ' %(bigPtotal))
-    mcsSummaryFile.write('\nAverage precipitation area percentage is %.4f percent ' %(precipAreaPercent))
+    ##mcsSummaryFile.write('\nAverage minimum precipitation rate is %.4f mmh^-1' %(avgMinPrecipRate))
+    ##mcsSummaryFile.write('\nAverage maximum precipitation rate is %.4f mm h^-1' %(avgMaxPrecipRate))
+    ##mcsSummaryFile.write('\nAverage precipitation is %.4f mm ' %(avgPrecipTotal))
+    ##mcsSummaryFile.write('\nAverage total precipitation during MCSs is %.4f mm/LD ' %(bigPtotal))
+    ##mcsSummaryFile.write('\nAverage precipitation area percentage is %.4f percent ' %(precipAreaPercent))
 
     mcsUserFile.close
     mcsSummaryFile.close
