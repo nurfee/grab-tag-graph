@@ -218,7 +218,7 @@ def create_main_directory(mainDirStr):
     try:
         os.makedirs('images')
         os.makedirs('textFiles')
-        os.makedirs('MERGnetcdfCEs')
+        os.makedirs('IRnetcdfCEs')
         os.makedirs('TRMMnetcdfCEs')
     except:
         print 'Directory exists already!!!'

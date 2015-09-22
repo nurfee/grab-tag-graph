@@ -190,7 +190,7 @@ def find_cloud_elements(mergImgs, timelist, mainStrDir, lat, lon, TRMMdirName=No
                 # cloudElementsTextFile = open(thisFileName,'w')
                 #-------------------------------------------------
                 # ------ NETCDF File stuff for brightness temp stuff ------------------------------------
-                thisFileName = MAIN_DIRECTORY + '/MERGnetcdfCEs/cloudElements' + \
+                thisFileName = MAIN_DIRECTORY + '/IRnetcdfCEs/cloudElements' + \
                                 (str(timelist[t])).replace(' ', '_') + ceUniqueID + '.nc'
                 currNetCDFCEData = Dataset(thisFileName, 'w', format='NETCDF4')
                 currNetCDFCEData.description = 'Cloud Element '+ ceUniqueID + ' temperature data'
@@ -517,7 +517,7 @@ def find_precip_rate(TRMMdirName, timelist):
     allCEnodesTRMMdata = []
     precipTotal = 0.0
 
-    os.chdir((MAIN_DIRECTORY + '/MERGnetcdfCEs/'))
+    os.chdir((MAIN_DIRECTORY + '/IRnetcdfCEs/'))
     temporalRes = 3 #3 hours for TRMM
 
     #sort files

@@ -124,7 +124,7 @@ def main():
     #create main directory and file structure for storing intel
     DIRS['mainDirStr'] = iomethods.create_main_directory(DIRS['mainDirStr'])
     TRMMCEdirName = DIRS['mainDirStr']+'/TRMMnetcdfCEs'
-    CEdirName = DIRS['mainDirStr']+'/MERGnetcdfCEs'
+    CEdirName = DIRS['mainDirStr']+'/IRnetcdfCEs'
 
     # for doing some postprocessing with the clipped datasets instead of running the full program, e.g.
     postprocessing = raw_input("> Do you wish to postprocess data? [y/n] \n")
@@ -258,7 +258,7 @@ def postprocessing_plot_menu(DIRS):
     Output:: None
     '''
     TRMMCEdirName = DIRS['mainDirStr']+'/TRMMnetcdfCEs'
-    CEdirName = DIRS['mainDirStr']+'/MERGnetcdfCEs'
+    CEdirName = DIRS['mainDirStr']+'/IRnetcdfCEs'
 
     option = display_postprocessing_plot_menu()
     while option != 0:
