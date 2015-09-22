@@ -6,6 +6,7 @@ import os
 import subprocess
 
 import networkx as nx
+import sys
 
 #mccSearch modules
 import mccSearch
@@ -15,6 +16,8 @@ import metrics
 import iomethods
 
 def main():
+    sys.setrecursionlimit(2000)
+    
     CEGraph = nx.DiGraph()
     prunedGraph = nx.DiGraph()
     MCCList =[]
@@ -24,17 +27,17 @@ def main():
     allCETRMMList =[]
     #DIRS={}
     DIRS={
-               "mainDirStr" : "/Users/nsagitap/output/devel/",
+               "mainDirStr" : "/Users/nsagitap/output/GTG/T235AL3S8P60/",
                 "TRMMdirName" : None,
-                "CEoriDirName" : "/Users/nsagitap/data/MTSAT/Indonesia/200702/S8"
+                "CEoriDirName" : "/Users/nsagitap/data/MTSAT/Indonesia/200706/S8"
     #          mainDirStr= "/directory/to/where/to/store/outputs"
     #          TRMMdirName = "/directory/to/the/TRMM/netCDF/files"
     #          CEoriDirName = "/directory/to/the/MERG/netCDF/files"
              }
     preprocessing = ''
     rawMERG = ''
-    startDateTime   = '200702010030'
-    endDateTime     = '200702010630'
+    startDateTime   = '200706010030'
+    endDateTime     = '200706302330'
 
     #for GrADs
     subprocess.call('export DISPLAY=:0.0', shell=True)

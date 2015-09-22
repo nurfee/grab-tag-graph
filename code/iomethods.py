@@ -38,12 +38,12 @@ STRUCTURING_ELEMENT = [[0, 1, 0],
                       ] #the matrix for determining the pattern for the contiguous boxes and must
                         #have same rank of the matrix it is being compared against
 #criteria for determining cloud elements and edges
-T_BB_MAX = 243  #warmest temp to allow (-30C to -55C according to Morel and Sensi 2002)
+T_BB_MAX = 235  #warmest temp to allow (-30C to -55C according to Morel and Sensi 2002)
 T_BB_MIN = 218  #cooler temp for the center of the system
 CONVECTIVE_FRACTION = 0.90 #the min temp/max temp that would be expected in a CE
                            #this is highly conservative (only a 10K difference)
 MIN_MCS_DURATION = 3    #minimum time for a MCS to exist
-AREA_MIN = 2400.0       #minimum area for CE criteria in km^2 according to Vila et al. (2008) is 2400
+AREA_MIN = 5000.0       #minimum area for CE criteria in km^2 according to Vila et al. (2008) is 2400
 MIN_OVERLAP = 10000.00   #km^2  from Williams and Houze 1987, indir ref in Arnaud et al 1992
 
 #---the MCC criteria
