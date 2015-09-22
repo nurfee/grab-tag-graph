@@ -190,7 +190,8 @@ def create_text_file(finalMCCList, identifier, MAIN_DIRECTORY, OUTER_CLOUD_SHIEL
 
         startTime = mccSearch.this_dict(eachPath[0])['cloudElementTime']
         endTime = mccSearch.this_dict(eachPath[-1])['cloudElementTime']
-        duration = (endTime - startTime) + timedelta(hours=TRES)
+        #duration = (endTime - startTime) + timedelta(hours=TRES)
+        duration = (endTime - startTime) + timedelta(minutes=int(TRES*60))
 
         # convert datatime duration to seconds and add to the total for the average duration of all MCS in finalMCCList
         durations += (duration.total_seconds())

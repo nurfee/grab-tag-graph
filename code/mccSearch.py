@@ -203,13 +203,15 @@ def find_cloud_elements(mergImgs, timelist, mainStrDir, lat, lon, TRMMdirName=No
                 # variables
                 tempDims = ('time', 'lat', 'lon',)
                 times = currNetCDFCEData.createVariable('time', 'f8', ('time',))
-                times.units = 'hours since '+ str(timelist[t])[:-6]
+                #times.units = 'hours since '+ str(timelist[t])[:-6]
+                times.units = 'minutes since '+ str(timelist[t])[:-3]
                 latitudes = currNetCDFCEData.createVariable('latitude', 'f8', ('lat',))
                 longitudes = currNetCDFCEData.createVariable('longitude', 'f8', ('lon',))
                 brightnesstemp = currNetCDFCEData.createVariable('brightnesstemp', 'f8', tempDims)
                 brightnesstemp.units = 'Kelvin'
                 # NETCDF data
-                dates = [timelist[t] + timedelta(hours=0)]
+                #dates = [timelist[t] + timedelta(hours=0)]
+                dates = [timelist[t]+timedelta(minutes=0)]
                 times[:] = date2num(dates, units=times.units)
                 longitudes[:] = LON[0, :]
                 longitudes.units = 'degrees_east'
