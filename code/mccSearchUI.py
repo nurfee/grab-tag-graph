@@ -14,7 +14,7 @@ import utils
 import plotting
 import metrics
 import iomethods
-
+import time
 
 def main():
     sys.setrecursionlimit(5000)
@@ -26,12 +26,16 @@ def main():
     MCSMCCNodesList =[]
     allMCSsList =[]
     allCETRMMList =[]
-    DIRS={}
-    # DIRS={
-    #          mainDirStr= "/directory/to/where/to/store/outputs"
-    #          TRMMdirName = "/directory/to/the/TRMM/netCDF/files"
-    #          CEoriDirName = "/directory/to/the/MERG/netCDF/files"
-    #         }
+    #DIRS={}
+    DIRS={
+                #"mainDirStr" : "/Users/nsagitap/output/GTG/sensitivity/T213BL3S4P60",
+                "mainDirStr" : "/Users/nsagitap/output/GTG/devel/T240BL3S4P60",
+                "TRMMdirName" : None,
+                #"CEoriDirName" : "/Users/nsagitap/data/Himawari/ahitest_201508/S04/201508/20150825/"
+                "CEoriDirName" : "/Users/nsagitap/data/MTSAT/Indonesia/200704/"
+          }
+    startDateTime   = '200704010000'
+    endDateTime     = '200704302330'
     preprocessing = ''
     rawMERG = ''
 
@@ -40,7 +44,11 @@ def main():
 
 
     print "Running MCCSearch ..... \n"
-    DIRS['mainDirStr'] = raw_input("> Please enter working directory: \n" )   # This is where data created will be stored
+    # Main Directory
+    if not 'mainDirStr' in DIRS.keys():
+        DIRS['mainDirStr'] = raw_input("> Please enter working directory: \n" )   # This is where data created will be stored
+    else:
+        print "> Working directory : ", DIRS['mainDirStr']
 
     preprocessing = raw_input ("> Do you need to preprocess the MERG files? [y/n]: \n")
     while preprocessing.lower() != 'n':
@@ -58,8 +66,11 @@ def main():
 
 
     #get the location of the MERG and TRMM data
-    DIRS['CEoriDirName'] = raw_input("> Please enter the directory to the MERG netCDF files: \n")
-
+    ## MERG.nc directory
+    if not 'CEoriDirName' in DIRS.keys():
+        DIRS['CEoriDirName'] = raw_input("> Please enter the directory to the MERG netCDF files: \n")
+    else:
+        print "> Directory of MERG netCDF files: ", DIRS['CEoriDirName']
     try:
         if not os.path.exists(DIRS['CEoriDirName']):
             print "Error! MERG invalid path!"
@@ -68,7 +79,11 @@ def main():
         print "..."
 
 
-    DIRS['TRMMdirName'] = raw_input("> Please enter the location to the raw TRMM netCDF files: \n")
+    ## TRMM.nc directory
+    if not 'TRMMdirName' in DIRS.keys():
+        DIRS['TRMMdirName'] = raw_input("> Please enter the location to the raw TRMM netCDF files: \n")
+    else:
+        print "> Directory of raw TRMM netCDF files: ", DIRS['TRMMdirName']
     try:
         if not os.path.exists(DIRS['TRMMdirName']):
             print "Error: TRMM invalid path!"
@@ -77,34 +92,43 @@ def main():
         pass
 
     #get the dates for analysis
-    startDateTime = raw_input("> Please enter the start date and time yyyymmddhrmm: \n")
+    ## Start date time
+    if not startDateTime:
+        startDateTime = raw_input("> Please enter the start date and time yyyymmddhrmm: \n")
+    else:
+        print "> Start date time: ", startDateTime
     #check validity of time
     while utils.valid_date(startDateTime) != True:
         print "Invalid time entered for startDateTime!"
         startDateTime = raw_input("> Please enter the start date and time yyyymmddhrmm: \n")
 
-    endDateTime = raw_input("> Please enter the end date and time yyyymmddhrmm: \n")
+    ## End date time
+    if not endDateTime:
+        endDateTime = raw_input("> Please enter the end date and time yyyymmddhrmm: \n")
+    else:
+        print "> End date time: ", endDateTime
     while utils.valid_date(endDateTime) != True:
         print "Invalid time entered for endDateTime!"
         endDateTime = raw_input("> Please enter the end date and time yyyymmddhrmm: \n")
 
     #check if all the files exisits in the MERG and TRMM directories entered
     #test,_ = iomethods.check_for_files(startDateTime, endDateTime, DIRS['TRMMdirName'], 2)
-    test,_ = iomethods.check_for_files(DIRS['TRMMdirName'], startDateTime, endDateTime, 3, 'hour')
-    if test == False:
-        print "Error with files in the original MERG directory entered. Please check your files before restarting. "
-        return
+    if DIRS['TRMMdirName']:
+        test,_ = iomethods.check_for_files(DIRS['TRMMdirName'], startDateTime, endDateTime, 3, 'hour')
+        if test == False:
+            print "Error with files in the original TRMM directory entered. Please check your files before restarting. "
+            return
     #test,filelist = iomethods.check_for_files(startDateTime, endDateTime, DIRS['CEoriDirName'],1)
     test,filelist = iomethods.check_for_files(DIRS['CEoriDirName'], startDateTime, endDateTime, 1, 'hour')
 
     if test == False:
-        print "Error with files in the original TRMM directory entered. Please check your files before restarting. "
+        print "Error with files in the original MERG directory entered. Please check your files before restarting. "
         return
 
     #create main directory and file structure for storing intel
     DIRS['mainDirStr'] = iomethods.create_main_directory(DIRS['mainDirStr'])
     TRMMCEdirName = DIRS['mainDirStr']+'/TRMMnetcdfCEs'
-    CEdirName = DIRS['mainDirStr']+'/MERGnetcdfCEs'
+    CEdirName = DIRS['mainDirStr']+'/IRnetcdfCEs'
 
     # for doing some postprocessing with the clipped datasets instead of running the full program, e.g.
     postprocessing = raw_input("> Do you wish to postprocess data? [y/n] \n")
@@ -117,13 +141,16 @@ def main():
         else:
             print "\n Invalid option."
             postprocessing = raw_input("> Do you wish to postprocess data? [y/n] \n")
+
+    stim = time.time() # tic
     # -------------------------------------------------------------------------------------------------
     # Getting started. Make it so number one!
     print ("-"*80)
     print "\t\t Starting the MCCSearch Analysis "
     print ("-"*80)
     print "\n -------------- Reading MERG and TRMM Data ----------"
-    mergImgs, timeList, LAT, LON = iomethods.read_data(DIRS['CEoriDirName'],'ch4','latitude','longitude', filelist)
+    #mergImgs, timeList, LAT, LON = iomethods.read_data(DIRS['CEoriDirName'],'ch4','latitude','longitude', filelist)
+    mergImgs, timeList, LAT, LON = iomethods.read_data(DIRS['CEoriDirName'],'tbb','lat','lon', filelist)
     print "\n -------------- findCloudElements ----------"
     CEGraph = mccSearch.find_cloud_elements(mergImgs,timeList,DIRS['mainDirStr'], LAT,LON,DIRS['TRMMdirName'])
     #theList = CEGraph.successors(node)
@@ -140,6 +167,9 @@ def main():
     print "\n -------------- METRICS ----------"
     print ("-"*80)
     #some calculations/metrics that work that work
+    etim = time.time() #toc
+    print "Elapsed time: ", etim-stim, " second"
+
     print "creating the MCC userfile ", metrics.create_text_file(MCCList,1, DIRS['mainDirStr'], 80000.0, 1)
     print "creating the MCS userfile ", metrics.create_text_file(MCSList,2, DIRS['mainDirStr'], 80000.0, 1)
     plot_menu(MCCList, MCSList, DIRS)
@@ -237,7 +267,7 @@ def postprocessing_plot_menu(DIRS):
     Output:: None
     '''
     TRMMCEdirName = DIRS['mainDirStr']+'/TRMMnetcdfCEs'
-    CEdirName = DIRS['mainDirStr']+'/MERGnetcdfCEs'
+    CEdirName = DIRS['mainDirStr']+'/IRnetcdfCEs'
 
     option = display_postprocessing_plot_menu()
     while option != 0:

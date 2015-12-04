@@ -22,13 +22,18 @@ import time
 # --------------------- User defined variables ---------------------
 #FYI the lat lon values are not necessarily inclusive of the points given. These are the limits
 #the first point closest the the value (for the min) from the MERG data is used, etc.
-LATMIN = '5.0' #min latitude; -ve values in the SH e.g. 5S = -5
-LATMAX = '19.0' #max latitude; -ve values in the SH e.g. 5S = -5 20.0
-LONMIN = '-5.0' #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
-LONMAX = '9.0' #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
+#LATMIN = '5.0' #min latitude; -ve values in the SH e.g. 5S = -5
+#LATMAX = '19.0' #max latitude; -ve values in the SH e.g. 5S = -5 20.0
+#LONMIN = '-5.0' #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
+#LONMAX = '9.0' #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
+LATMIN = '-17.0'        #min latitude; -ve values in the SH e.g. 5S = -5
+LATMAX = '17.0'         #max latitude; -ve values in the SH e.g. 5S = -5 20.0
+LONMIN = '88.0'         #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
+LONMAX = '152.0'        #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
 XRES = 4.0              #x direction spatial resolution in km
 YRES = 4.0              #y direction spatial resolution in km
-TRES = 1                #temporal resolution in hrs
+MINFAC = 1.0
+TRES = 1/MINFAC                #temporal resolution in hrs
 LAT_DISTANCE = 111.0    #the avg distance in km for 1deg lat for the region being considered
 LON_DISTANCE = 111.0    #the avg distance in km for 1deg lon for the region being considered
 STRUCTURING_ELEMENT = [[0, 1, 0],
@@ -37,11 +42,11 @@ STRUCTURING_ELEMENT = [[0, 1, 0],
                       ] #the matrix for determining the pattern for the contiguous boxes and must
                         #have same rank of the matrix it is being compared against
                         #criteria for determining cloud elements and edges
-T_BB_MAX = 243  #warmest temp to allow (-30C to -55C according to Morel and Sensi 2002)
+T_BB_MAX = 240  #warmest temp to allow (-30C to -55C according to Morel and Sensi 2002)
 T_BB_MIN = 218  #cooler temp for the center of the system
 CONVECTIVE_FRACTION = 0.90 #the min temp/max temp that would be expected in a CE.. this is highly
                            #conservative (only a 10K difference)
-MIN_MCS_DURATION = 3    #minimum time for a MCS to exist
+MIN_MCS_DURATION = 3*MINFAC    #minimum time for a MCS to exist
 AREA_MIN = 2400.0       #minimum area for CE criteria in km^2 according to Vila et al. (2008) is 2400
 MIN_OVERLAP = 10000.00   #km^2  from Williams and Houze 1987, indir ref in Arnaud et al 1992
 
@@ -52,8 +57,8 @@ OUTER_CLOUD_SHIELD_AREA = 80000.0 #km^2
 INNER_CLOUD_SHIELD_AREA = 30000.0 #km^2
 OUTER_CLOUD_SHIELD_TEMPERATURE = 233 #in K
 INNER_CLOUD_SHIELD_TEMPERATURE = 213 #in K
-MINIMUM_DURATION = 6  #min number of frames the MCC must exist for (assuming hrly frames, MCCs is 6hrs)
-MAXIMUM_DURATION = 24 #max number of framce the MCC can last for
+MINIMUM_DURATION = 6*MINFAC  #min number of frames the MCC must exist for (assuming hrly frames, MCCs is 6hrs)
+MAXIMUM_DURATION = 24*MINFAC #max number of framce the MCC can last for
 
 NUM_IMAGE_WORKERS = 2 #Number of workers to send off for extracting CE in the independent image frames
 
@@ -394,7 +399,7 @@ def find_single_frame_cloud_elements(t,mergImgs,timelist, mainStrDir, lat, lon, 
             # cloudElementsTextFile = open(thisFileName,'w')
             #-------------------------------------------------
             # ------ NETCDF File stuff for brightness temp stuff ------------------------------------
-            thisFileName = MAIN_DIRECTORY + '/MERGnetcdfCEs/cloudElements' + \
+            thisFileName = MAIN_DIRECTORY + '/IRnetcdfCEs/cloudElements' + \
                             (str(timelist[t])).replace(' ', '_') + ceUniqueID + '.nc'
             currNetCDFCEData = Dataset(thisFileName, 'w', format='NETCDF4')
             currNetCDFCEData.description = 'Cloud Element '+ ceUniqueID + ' temperature data'
@@ -407,13 +412,15 @@ def find_single_frame_cloud_elements(t,mergImgs,timelist, mainStrDir, lat, lon, 
             # variables
             tempDims = ('time', 'lat', 'lon',)
             times = currNetCDFCEData.createVariable('time', 'f8', ('time',))
-            times.units = 'hours since '+ str(timelist[t])[:-6]
+            #times.units = 'hours since '+ str(timelist[t])[:-6]
+            times.units = 'minutes since '+ str(timelist[t])[:-3]
             latitudes = currNetCDFCEData.createVariable('latitude', 'f8', ('lat',))
             longitudes = currNetCDFCEData.createVariable('longitude', 'f8', ('lon',))
-            brightnesstemp = currNetCDFCEData.createVariable('brightnesstemp', 'i16', tempDims)
+            brightnesstemp = currNetCDFCEData.createVariable('brightnesstemp', 'f8', tempDims)
             brightnesstemp.units = 'Kelvin'
             # NETCDF data
-            dates = [timelist[t] + timedelta(hours=0)]
+            #dates = [timelist[t] + timedelta(hours=0)]
+            dates = [timelist[t]+timedelta(minutes=0)]
             times[:] = date2num(dates, units=times.units)
             longitudes[:] = LON[0, :]
             longitudes.units = 'degrees_east'
@@ -425,7 +432,7 @@ def find_single_frame_cloud_elements(t,mergImgs,timelist, mainStrDir, lat, lon, 
             #-----------End most of NETCDF file stuff ------------------------------------
 
             #generate array of zeros for brightness temperature
-            brightnesstemp1 = ma.zeros((1, len(latitudes), len(longitudes))).astype('int16')
+            brightnesstemp1 = ma.zeros((1, len(latitudes), len(longitudes))).astype('f8')
             finalCETRMMvalues = ma.zeros((brightnesstemp.shape))
             #populate cloudElementLatLons by unpacking the original values from loc to get the actual value for lat and lon
             cloudElementNonZeros = cloudElement.nonzero()
@@ -620,7 +627,7 @@ def find_precip_rate(TRMMdirName, timelist):
     allCEnodesTRMMdata = []
     precipTotal = 0.0
 
-    os.chdir((MAIN_DIRECTORY + '/MERGnetcdfCEs/'))
+    os.chdir((MAIN_DIRECTORY + '/IRnetcdfCEs/'))
     temporalRes = 3 #3 hours for TRMM
 
     #sort files
