@@ -28,16 +28,19 @@ def main():
     allCETRMMList =[]
     #DIRS={}
     DIRS={
-                #"mainDirStr" : "/Users/nsagitap/output/GTG/sensitivity/T213BL3S4P60",
-                "mainDirStr" : "/Users/nsagitap/output/GTG/devel/T240BL3S4P60",
+                #"mainDirStr" : "/Users/nsagitap/output/GTG/devel/test",
+"mainDirStr"	:	"/Users/nsagitap/output/GTG/sensitivity_200703/T253BL03S10P60",
                 "TRMMdirName" : None,
                 #"CEoriDirName" : "/Users/nsagitap/data/Himawari/ahitest_201508/S04/201508/20150825/"
-                "CEoriDirName" : "/Users/nsagitap/data/MTSAT/Indonesia/200704/"
+"CEoriDirName"	:	"/Users/nsagitap/data/MTSAT/Indonesia/200703/S10"
           }
-    startDateTime   = '200704010000'
-    endDateTime     = '200704302330'
-    preprocessing = ''
+    #startDateTime   = '201508250000'
+    #endDateTime     = '201508252330'
+    startDateTime   = '200703010030'
+    endDateTime     = '200703022330'
+    preprocessing = 'n'
     rawMERG = ''
+    postprocessing = 'n'
 
     #for GrADs
     subprocess.call('export DISPLAY=:0.0', shell=True)
@@ -50,7 +53,8 @@ def main():
     else:
         print "> Working directory : ", DIRS['mainDirStr']
 
-    preprocessing = raw_input ("> Do you need to preprocess the MERG files? [y/n]: \n")
+    if not preprocessing:
+      preprocessing = raw_input ("> Do you need to preprocess the MERG files? [y/n]: \n")
     while preprocessing.lower() != 'n':
         if preprocessing.lower() == 'y':
             #get location for raw files
@@ -119,7 +123,9 @@ def main():
             print "Error with files in the original TRMM directory entered. Please check your files before restarting. "
             return
     #test,filelist = iomethods.check_for_files(startDateTime, endDateTime, DIRS['CEoriDirName'],1)
-    test,filelist = iomethods.check_for_files(DIRS['CEoriDirName'], startDateTime, endDateTime, 1, 'hour')
+    #test,filelist = iomethods.check_for_files(DIRS['CEoriDirName'], startDateTime, endDateTime, 1, 'hour')
+    #test,filelist = iomethods.check_for_files(DIRS['CEoriDirName'], startDateTime, endDateTime, 30, 'minute')
+    test,filelist = iomethods.check_for_files(DIRS['CEoriDirName'], startDateTime, endDateTime, 60, 'minute')
 
     if test == False:
         print "Error with files in the original MERG directory entered. Please check your files before restarting. "
@@ -131,7 +137,8 @@ def main():
     CEdirName = DIRS['mainDirStr']+'/IRnetcdfCEs'
 
     # for doing some postprocessing with the clipped datasets instead of running the full program, e.g.
-    postprocessing = raw_input("> Do you wish to postprocess data? [y/n] \n")
+    if not postprocessing:
+      postprocessing = raw_input("> Do you wish to postprocess data? [y/n] \n")
     while postprocessing.lower() != 'n':
         if postprocessing.lower() == 'y':
             option = postprocessing_plot_menu(DIRS)
@@ -172,7 +179,7 @@ def main():
 
     print "creating the MCC userfile ", metrics.create_text_file(MCCList,1, DIRS['mainDirStr'], 80000.0, 1)
     print "creating the MCS userfile ", metrics.create_text_file(MCSList,2, DIRS['mainDirStr'], 80000.0, 1)
-    plot_menu(MCCList, MCSList, DIRS)
+    #plot_menu(MCCList, MCSList, DIRS)
 
     #Let's get outta here! Engage!
     print ("-"*80)

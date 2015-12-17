@@ -30,8 +30,8 @@ LATMIN = '-17.0'        #min latitude; -ve values in the SH e.g. 5S = -5
 LATMAX = '17.0'         #max latitude; -ve values in the SH e.g. 5S = -5 20.0
 LONMIN = '88.0'         #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
 LONMAX = '152.0'        #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
-XRES = 4.0              #x direction spatial resolution in km
-YRES = 4.0              #y direction spatial resolution in km
+XRES=10.0
+YRES=10.0
 MINFAC = 1.0
 TRES = 1/MINFAC                #temporal resolution in hrs
 LAT_DISTANCE = 111.0    #the avg distance in km for 1deg lat for the region being considered
@@ -42,12 +42,12 @@ STRUCTURING_ELEMENT = [[0, 1, 0],
                       ] #the matrix for determining the pattern for the contiguous boxes and must
                         #have same rank of the matrix it is being compared against
                         #criteria for determining cloud elements and edges
-T_BB_MAX = 240  #warmest temp to allow (-30C to -55C according to Morel and Sensi 2002)
+T_BB_MAX=253
 T_BB_MIN = 218  #cooler temp for the center of the system
 CONVECTIVE_FRACTION = 0.90 #the min temp/max temp that would be expected in a CE.. this is highly
                            #conservative (only a 10K difference)
 MIN_MCS_DURATION = 3*MINFAC    #minimum time for a MCS to exist
-AREA_MIN = 2400.0       #minimum area for CE criteria in km^2 according to Vila et al. (2008) is 2400
+AREA_MIN=2400.0
 MIN_OVERLAP = 10000.00   #km^2  from Williams and Houze 1987, indir ref in Arnaud et al 1992
 
 #---the MCC criteria
@@ -60,7 +60,7 @@ INNER_CLOUD_SHIELD_TEMPERATURE = 213 #in K
 MINIMUM_DURATION = 6*MINFAC  #min number of frames the MCC must exist for (assuming hrly frames, MCCs is 6hrs)
 MAXIMUM_DURATION = 24*MINFAC #max number of framce the MCC can last for
 
-NUM_IMAGE_WORKERS = 2 #Number of workers to send off for extracting CE in the independent image frames
+NUM_IMAGE_WORKERS = 3 #Number of workers to send off for extracting CE in the independent image frames
 
 #------------------- End user defined Variables -------------------
 edgeWeight = [1, 2, 3] #weights for the graph edges
@@ -372,7 +372,10 @@ def find_single_frame_cloud_elements(t,mergImgs,timelist, mainStrDir, lat, lon, 
             print 'Error is ', e
             continue
 
-        cloudElement = mergImgs[t,:,:][loc]
+        cloudElement = mergImgs[t,:,:][loc].copy()
+        maskframe = ma.where(frame[loc] != (count + 1))
+        cloudElement[maskframe] = 0.0
+        #cloudElement = mergImgs[t,:,:][loc]
         labels, _ = ndimage.label(cloudElement)
 
         #determine the true lats and lons for this particular CE
@@ -381,6 +384,8 @@ def find_single_frame_cloud_elements(t,mergImgs,timelist, mainStrDir, lat, lon, 
 
         #determine number of boxes in this cloudelement
         numOfBoxes = np.count_nonzero(cloudElement)
+        if numOfBoxes < 1:
+            continue
         cloudElementArea = numOfBoxes * XRES * YRES
 
         #If the area is greater than the area required, or if the area is smaller than the suggested area,

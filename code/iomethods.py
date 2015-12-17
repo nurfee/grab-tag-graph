@@ -26,8 +26,8 @@ LATMIN = '-17.0'        #min latitude; -ve values in the SH e.g. 5S = -5
 LATMAX = '17.0'         #max latitude; -ve values in the SH e.g. 5S = -5 20.0
 LONMIN = '88.0'         #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
 LONMAX = '152.0'        #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
-XRES = 4.0              #x direction spatial resolution in km
-YRES = 4.0              #y direction spatial resolution in km
+XRES=10.0
+YRES=10.0
 MINFAC = 1.0
 TRES = 1/MINFAC                #temporal resolution in hrs
 LAT_DISTANCE = 111.0    #the avg distance in km for 1deg lat for the region being considered
@@ -38,12 +38,12 @@ STRUCTURING_ELEMENT = [[0, 1, 0],
                       ] #the matrix for determining the pattern for the contiguous boxes and must
                         #have same rank of the matrix it is being compared against
 #criteria for determining cloud elements and edges
-T_BB_MAX = 240  #warmest temp to allow (-30C to -55C according to Morel and Sensi 2002)
+T_BB_MAX=253
 T_BB_MIN = 218  #cooler temp for the center of the system
 CONVECTIVE_FRACTION = 0.90 #the min temp/max temp that would be expected in a CE
                            #this is highly conservative (only a 10K difference)
 MIN_MCS_DURATION = 3*MINFAC    #minimum time for a MCS to exist
-AREA_MIN = 2400.0       #minimum area for CE criteria in km^2 according to Vila et al. (2008) is 2400
+AREA_MIN=2400.0
 MIN_OVERLAP = 10000.00   #km^2  from Williams and Houze 1987, indir ref in Arnaud et al 1992
 
 #---the MCC criteria
@@ -111,7 +111,8 @@ def check_for_files(dirPath, startTime, endTime, tdelta, tRes):
         currFileTime = datetime.strptime(startTime[:12], '%Y%m%d%H%M')
         tRes = 'minute'
 
-    filelist = filter(path.isfile, glob.glob((dirPath+'/*.nc')))
+    #filelist = filter(path.isfile, glob.glob((dirPath+'/*.nc')))
+    filelist = filter(path.isfile, glob.glob((dirPath+'/'+'*'+startTime+'*.nc')))
     filelist.sort()
 
 
@@ -145,7 +146,7 @@ def check_for_files(dirPath, startTime, endTime, tdelta, tRes):
     while currFile is not endFile:
         if not path.isfile(currFile):
             status = False
-            return status, filelist
+            #return status, filelist # Enable missing data
         else:
             filelist.append(currFile)
 
@@ -171,6 +172,7 @@ def check_for_files(dirPath, startTime, endTime, tdelta, tRes):
                 currTimeInFile = find_time_in_file(currFileTime.strftime('%Y%m%d%H%M'), startTimeInFile)
                 currFile = glob.glob(dirPath+'/'+filenamePattern+'*'+currTimeInFile+'*')[0]
         except:
+            currFile = ''
             print "!!! Missing file at : ", currTimeInFile
 
     return status, filelist
@@ -298,8 +300,8 @@ def read_data(dirName, varName, latName, lonName, filelist=None):
         lonmaxIndex = (np.where(alllonsraw == lonmaxNETCDF))[0][0]
 
         #subsetting the data
-        latsraw = alllatsraw[latminIndex: latmaxIndex]
-        lonsraw = alllonsraw[lonminIndex:lonmaxIndex]
+        latsraw = alllatsraw[latminIndex: latmaxIndex+1]
+        lonsraw = alllonsraw[lonminIndex:lonmaxIndex+1]
 
         LON, LAT = np.meshgrid(lonsraw, latsraw)
 
