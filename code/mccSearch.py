@@ -26,13 +26,13 @@ import time
 #LATMAX = '19.0' #max latitude; -ve values in the SH e.g. 5S = -5 20.0
 #LONMIN = '-5.0' #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
 #LONMAX = '9.0' #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
-LATMIN = '-17.0'        #min latitude; -ve values in the SH e.g. 5S = -5
-LATMAX = '17.0'         #max latitude; -ve values in the SH e.g. 5S = -5 20.0
-LONMIN = '88.0'         #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
-LONMAX = '152.0'        #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
-XRES=10.0
-YRES=10.0
-MINFAC = 1.0
+LATMIN = '-10.01'        #min latitude; -ve values in the SH e.g. 5S = -5
+LATMAX = '-3.99'         #max latitude; -ve values in the SH e.g. 5S = -5 20.0
+LONMIN = '102.99'         #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
+LONMAX = '115.01'        #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
+XRES=2.0
+YRES=2.0
+MINFAC = 6.0
 TRES = 1/MINFAC                #temporal resolution in hrs
 LAT_DISTANCE = 111.0    #the avg distance in km for 1deg lat for the region being considered
 LON_DISTANCE = 111.0    #the avg distance in km for 1deg lon for the region being considered
@@ -42,7 +42,7 @@ STRUCTURING_ELEMENT = [[0, 1, 0],
                       ] #the matrix for determining the pattern for the contiguous boxes and must
                         #have same rank of the matrix it is being compared against
                         #criteria for determining cloud elements and edges
-T_BB_MAX=253
+T_BB_MAX=240
 T_BB_MIN = 218  #cooler temp for the center of the system
 CONVECTIVE_FRACTION = 0.90 #the min temp/max temp that would be expected in a CE.. this is highly
                            #conservative (only a 10K difference)
@@ -321,7 +321,8 @@ def find_single_frame_cloud_elements(t,mergImgs,timelist, mainStrDir, lat, lon, 
     cloudElementsFileString = ''
     
     #determine contiguous locations with temeperature below the warmest temp i.e. cloudElements in each frame
-    frame, ceCounter = ndimage.measurements.label(mergImgs[t,:,:], structure=STRUCTURING_ELEMENT)
+    frame, ceCounter = find_detect_and_spread(mergImgs[t,:,:]) # Use DAS method
+    #frame, ceCounter = ndimage.measurements.label(mergImgs[t,:,:], structure=STRUCTURING_ELEMENT)
     frameceCounter = 0
     frameNum = t + 1
 
@@ -369,6 +370,8 @@ def find_single_frame_cloud_elements(t,mergImgs,timelist, mainStrDir, lat, lon, 
             loc = all_locs[count]
     
         except Exception, e:
+            print 't:', t
+            print 'Count:', count
             print 'Error is ', e
             continue
 
@@ -612,6 +615,132 @@ def find_single_frame_cloud_elements(t,mergImgs,timelist, mainStrDir, lat, lon, 
         latLonBox = []
 
     return [allCloudElementDicts, cloudElementsFileString]
+#**********************************************************************************************************************
+def find_detect_and_spread(tbbdata):
+    '''
+    Purpose:: Isolate Cloud Elements based on DAS method (Boer and Ramanathan, 1987)
+    Note:: deltatd and deltats is experimental; so does td range
+    '''
+    
+    sizemin = AREA_MIN/(XRES*YRES)
+    deltatd = 5
+    deltats = 5
+    td = np.arange(210,T_BB_MAX+0.001,deltatd)
+    if td[-1] < T_BB_MAX:
+        td = np.append(td,T_BB_MAX)
+
+    # Find neighbor offset
+    nhood = np.array(STRUCTURING_ELEMENT)
+    [ix,iy] = np.where(nhood == 1)
+    paddata = np.pad(tbbdata,1,mode='constant',constant_values=0)
+    padsize = np.shape(paddata)
+    ndim = np.size(padsize)
+    padcent = np.arange(ndim)
+    padcent[:] = 1
+
+    offsets = np.ravel_multi_index([ix, iy], dims=padsize, order='F') - np.ravel_multi_index(padcent, dims=padsize, order='F')
+
+    # Indexing
+    xgr, ygr = np.indices(padsize)
+    xgr = xgr.ravel(order='F')
+    ygr = ygr.ravel(order='F')
+
+    init = True
+    framefin = np.zeros_like(paddata).astype('int16')
+    for itd in xrange(td.size):
+    
+        tempMask = np.logical_and( paddata <= td[itd], paddata > 0 )
+        #tempMask = ma.masked_array(tempMask, mask=(tempMask > td[itd]), fill_value=0)
+        #tempMask[tempMask.mask] = 0
+    
+        # Remove area less than sizemin and give label to new object
+        framedum, objCount = ndimage.measurements.label(np.logical_and(tempMask,framefin==0), structure=STRUCTURING_ELEMENT)
+        if objCount < 2:
+            continue
+        
+        for count in xrange(objCount):
+            [ix,iy] = np.where(framedum == count+1)
+            if (ix.size >= sizemin) or (np.min(paddata[ix,iy]) / np.max(paddata[ix,iy]) < CONVECTIVE_FRACTION):
+                framefin[ix,iy] = framefin.max() + 1
+            else:
+                tempMask[ix,iy] = False
+    
+        if framefin.max() < 1:
+            continue
+    
+        # Get object edge before spreading
+        objFill = ndimage.binary_erosion(framefin>0, structure=STRUCTURING_ELEMENT)
+        objEdge = np.logical_and((framefin > 0),(objFill == False))
+        [ix,iy] = np.where(objEdge)
+        linidx  = np.ravel_multi_index([ix, iy], dims=padsize, order='F')
+    
+        # Spreading
+        nstep = 3
+        dstep = td[itd] + deltats
+        if dstep > T_BB_MAX:
+            dstep = T_BB_MAX
+        dstep = (dstep - td[itd]) / nstep
+        
+        for istep in xrange(nstep):#xrange(3):
+            #tstep = td[itd]+(istep+1)*deltats/nstep
+            tstep = td[itd]+(istep+1)*dstep
+            #if tstep > T_BB_MAX:
+            #    tstep = T_BB_MAX
+        
+            spread = True
+            while spread:
+                sprMask = np.logical_and(np.logical_and(paddata <= tstep, paddata > 0), framefin==0)
+                sprFlag = np.arange(len(linidx)).astype('bool')
+                sprFlag[:] = False
+                for ilin in xrange(len(linidx)):
+                    neighbor = linidx[ilin] + offsets
+                    valnei = np.where(neighbor > 0)[0]
+                    neispr = sprMask[xgr[neighbor[valnei]], ygr[neighbor[valnei]]]
+                    neidif = paddata[xgr[neighbor[valnei]], ygr[neighbor[valnei]]] -  paddata[xgr[linidx[ilin]], ygr[linidx[ilin]]]
+                    neilab = framefin[xgr[neighbor[valnei]], ygr[neighbor[valnei]]]
+                    
+                    checkneilab = np.logical_and(neilab > 0, neilab != framefin[xgr[linidx[ilin]],ygr[linidx[ilin]]])
+                    if np.count_nonzero(checkneilab) > 0:
+                        spridx = np.where(np.logical_and(neispr,neidif>1))[0]
+                    else:
+                        spridx = np.where(neispr)[0]
+                    #if istep == 2:
+                    #    spridx = np.where(np.logical_and(neispr,neidif>1))[0]
+                    #else:
+                    #spridx = np.where(neispr)[0]
+                
+                    if len(spridx) > 0:
+                        sprFlag[ilin] = True
+                        #print xgr[neighbor[spridx]], ygr[neighbor[spridx]]
+                        framefin[xgr[neighbor[valnei[spridx]]], ygr[neighbor[valnei[spridx]]]] = framefin[xgr[linidx[ilin]],ygr[linidx[ilin]]]
+            
+                objFill = ndimage.binary_erosion(framefin>0, structure=STRUCTURING_ELEMENT)
+                objEdge = np.logical_and((framefin > 0),(objFill == False))
+                [ix,iy] = np.where(objEdge)
+                linidx2  = np.ravel_multi_index([ix, iy], dims=padsize, order='F')
+            
+                nextlin = []
+                for lin in linidx2:
+                    if lin in linidx:
+                        continue
+                    else:
+                        nextlin.append(lin)
+            
+                if len(nextlin) > 1:
+                    linidx = np.array(nextlin)
+                else:
+                    linidx = []
+            
+                if (len(linidx) < 1) or (np.count_nonzero(sprFlag) < 1):
+                    spread = False
+                    break
+            
+                init = False
+    
+    framefin = framefin[1:padsize[0]-1,1:padsize[1]-1]
+    
+    return [framefin, framefin.max()]
+    
 #**********************************************************************************************************************
 def find_precip_rate(TRMMdirName, timelist):
     counter = 0
