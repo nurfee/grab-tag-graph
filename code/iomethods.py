@@ -22,13 +22,13 @@ import utils
 #LATMAX = '19.0' #max latitude; -ve values in the SH e.g. 5S = -5 20.0
 #LONMIN = '-5.0' #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
 #LONMAX = '9.0' #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
-LATMIN = '-17.0'        #min latitude; -ve values in the SH e.g. 5S = -5
-LATMAX = '17.0'         #max latitude; -ve values in the SH e.g. 5S = -5 20.0
-LONMIN = '88.0'         #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
-LONMAX = '152.0'        #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
-XRES=10.0
-YRES=10.0
-MINFAC = 1.0
+LATMIN = '-10.01'        #min latitude; -ve values in the SH e.g. 5S = -5
+LATMAX = '-3.99'         #max latitude; -ve values in the SH e.g. 5S = -5 20.0
+LONMIN = '102.99'         #min longitude; -ve values in the WH e.g. 59.8W = -59.8 -30
+LONMAX = '115.01'        #min longitude; -ve values in the WH e.g. 59.8W = -59.8  30
+XRES=2.0
+YRES=2.0
+MINFAC = 6.0
 TRES = 1/MINFAC                #temporal resolution in hrs
 LAT_DISTANCE = 111.0    #the avg distance in km for 1deg lat for the region being considered
 LON_DISTANCE = 111.0    #the avg distance in km for 1deg lon for the region being considered
@@ -38,7 +38,7 @@ STRUCTURING_ELEMENT = [[0, 1, 0],
                       ] #the matrix for determining the pattern for the contiguous boxes and must
                         #have same rank of the matrix it is being compared against
 #criteria for determining cloud elements and edges
-T_BB_MAX=253
+T_BB_MAX=240
 T_BB_MIN = 218  #cooler temp for the center of the system
 CONVECTIVE_FRACTION = 0.90 #the min temp/max temp that would be expected in a CE
                            #this is highly conservative (only a 10K difference)

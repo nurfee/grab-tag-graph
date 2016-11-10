@@ -17,7 +17,7 @@ import iomethods
 import time
 
 def main():
-    sys.setrecursionlimit(5000)
+    sys.setrecursionlimit(10000) #5000
 
     CEGraph = nx.DiGraph()
     prunedGraph = nx.DiGraph()
@@ -28,16 +28,16 @@ def main():
     allCETRMMList =[]
     #DIRS={}
     DIRS={
-                #"mainDirStr" : "/Users/nsagitap/output/GTG/devel/test",
-"mainDirStr"	:	"/Users/nsagitap/output/GTG/sensitivity_200703/T253BL03S10P60",
+                "mainDirStr" : "/Users/nsagitap/output/GTG_ahi/garut_short2/",
+                #"mainDirStr"	:	"/Users/nsagitap/output/GTG/sensitivity_200705/T220BL03S04P60",
                 "TRMMdirName" : None,
-                #"CEoriDirName" : "/Users/nsagitap/data/Himawari/ahitest_201508/S04/201508/20150825/"
-"CEoriDirName"	:	"/Users/nsagitap/data/MTSAT/Indonesia/200703/S10"
+                "CEoriDirName" : "/Users/nsagitap/data/Himawari/201609/"
+#"CEoriDirName"	:	"/Users/nsagitap/data/MTSAT/Indonesia/200701/S10"
           }
-    #startDateTime   = '201508250000'
-    #endDateTime     = '201508252330'
-    startDateTime   = '200703010030'
-    endDateTime     = '200703022330'
+    startDateTime   = '201609200000'
+    endDateTime     = '201609202350'
+    #startDateTime   = '200701010030'
+    #endDateTime     = '200701312330'
     preprocessing = 'n'
     rawMERG = ''
     postprocessing = 'n'
@@ -124,8 +124,8 @@ def main():
             return
     #test,filelist = iomethods.check_for_files(startDateTime, endDateTime, DIRS['CEoriDirName'],1)
     #test,filelist = iomethods.check_for_files(DIRS['CEoriDirName'], startDateTime, endDateTime, 1, 'hour')
-    #test,filelist = iomethods.check_for_files(DIRS['CEoriDirName'], startDateTime, endDateTime, 30, 'minute')
-    test,filelist = iomethods.check_for_files(DIRS['CEoriDirName'], startDateTime, endDateTime, 60, 'minute')
+    test,filelist = iomethods.check_for_files(DIRS['CEoriDirName'], startDateTime, endDateTime, 10, 'minute')
+    #test,filelist = iomethods.check_for_files(DIRS['CEoriDirName'], startDateTime, endDateTime, 60, 'minute')
 
     if test == False:
         print "Error with files in the original MERG directory entered. Please check your files before restarting. "
